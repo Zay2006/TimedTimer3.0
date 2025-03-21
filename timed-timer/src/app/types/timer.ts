@@ -11,8 +11,18 @@ export interface Session {
 export interface TimerPreset {
   id: string;
   name: string;
-  duration: number;
-  breakDuration: number;
+  duration: number;  // in seconds
+  breakDuration: number;  // in seconds
+  color?: string;  // optional theme color
+}
+
+export interface TimerStateType {
+  currentTime: number;  // in seconds
+  timerState: 'idle' | 'running' | 'paused' | 'break';
+  activePresetId: string | null;
+  completedSessions: number;
+  totalFocusTime: number;  // in seconds
+  totalBreakTime: number;  // in seconds
 }
 
 export interface TimerSettings {
@@ -23,6 +33,24 @@ export interface TimerSettings {
   presets: TimerPreset[];
   spotifyEnabled: boolean;
   spotifyToken: string | null;
+  // Timer-specific settings
+  autoStartBreaks: boolean;
+  autoStartNextSession: boolean;
+  longBreakInterval: number;  // number of sessions before long break
+  longBreakDuration: number;  // in seconds
+  showProgressBar: boolean;
+  showTimeInTitle: boolean;
+}
+
+export interface SessionStats {
+  id: string;
+  startTime: string;
+  endTime: string;
+  duration: number;  // in seconds
+  breakDuration: number;  // in seconds
+  presetId: string | null;
+  completed: boolean;
+  interrupted: boolean;
 }
 
 export interface Analytics {

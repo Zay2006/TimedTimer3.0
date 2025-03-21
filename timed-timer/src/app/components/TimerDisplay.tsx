@@ -1,23 +1,39 @@
 "use client";
 
-import React from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { useTimer } from '../context/TimerContext';
 import { useSettings } from '../context/SettingsContext';
 import { Card } from './ui/card';
+import { Button } from './ui/button';
 import { formatTime } from '../lib/utils';
 import { Progress } from './ui/progress';
+import { Play, Pause, Square, SkipForward } from 'lucide-react';
 
 export default function TimerDisplay() {
-  const { currentTime, totalTime, timerState } = useTimer();
+  const { currentTime, totalTime, timerState, startTimer, pauseTimer, resumeTimer, stopTimer, skipBreak } = useTimer();
   const { settings } = useSettings();
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const progress = totalTime > 0 ? ((totalTime - currentTime) / totalTime) * 100 : 0;
   const timeDisplay = formatTime(currentTime);
 
+  // Debounce button clicks to prevent choppy state changes
+  const handleButtonClick = useCallback((action: () => void) => {
+    if (buttonRef.current) {
+      buttonRef.current.disabled = true;
+      action();
+      setTimeout(() => {
+        if (buttonRef.current) {
+          buttonRef.current.disabled = false;
+        }
+      }, 300);
+    }
+  }, []);
+
   const getStateMessage = () => {
     switch (timerState) {
       case 'running':
-        return "Let&apos;s focus!";
+        return "Let's focus!";
       case 'paused':
         return "Take a moment";
       case 'break':
@@ -28,22 +44,77 @@ export default function TimerDisplay() {
   };
 
   return (
-    <Card className={`p-6 w-full max-w-md mx-auto ${settings.theme === 'dark' ? 'bg-slate-800' : 'bg-white'}`}>
-      <div className="space-y-4">
-        <div className="text-center">
-          <h2 className="text-4xl font-bold font-mono" role="timer" aria-label={`Time remaining: ${timeDisplay}`}>
-            {timeDisplay}
-          </h2>
-          <p className="text-sm text-muted-foreground mt-2" aria-live="polite">
-            {getStateMessage()}
-          </p>
+    <div className="flex items-center justify-center min-h-[50vh] p-4">
+      <Card className={`p-6 w-full max-w-md ${settings.theme === 'dark' ? 'bg-slate-800' : 'bg-white'}`}>
+        <div className="space-y-6">
+          <div className="text-center">
+            <h2 className="text-4xl font-bold font-mono" role="timer" aria-label={`Time remaining: ${timeDisplay}`}>
+              {timeDisplay}
+            </h2>
+            <p className="text-sm text-muted-foreground mt-2" aria-live="polite">
+              {getStateMessage()}
+            </p>
+          </div>
+          
+          <Progress 
+            value={progress} 
+            className="h-2" 
+            aria-label={`Timer progress: ${Math.round(progress)}%`}
+          />
+
+          <div className="flex justify-center gap-4 mt-4">
+            {timerState === 'idle' && (
+              <Button
+                ref={buttonRef}
+                onClick={() => handleButtonClick(() => startTimer(1500))}
+                className="transition-all"
+              >
+                <Play className="w-5 h-5" />
+              </Button>
+            )}
+            
+            {timerState === 'running' && (
+              <Button
+                ref={buttonRef}
+                onClick={() => handleButtonClick(pauseTimer)}
+                className="transition-all"
+              >
+                <Pause className="w-5 h-5" />
+              </Button>
+            )}
+            
+            {timerState === 'paused' && (
+              <Button
+                ref={buttonRef}
+                onClick={() => handleButtonClick(resumeTimer)}
+                className="transition-all"
+              >
+                <Play className="w-5 h-5" />
+              </Button>
+            )}
+            
+            {timerState !== 'idle' && (
+              <Button
+                variant="outline"
+                onClick={() => handleButtonClick(stopTimer)}
+                className="transition-all"
+              >
+                <Square className="w-5 h-5" />
+              </Button>
+            )}
+            
+            {timerState === 'break' && (
+              <Button
+                variant="outline"
+                onClick={() => handleButtonClick(skipBreak)}
+                className="transition-all"
+              >
+                <SkipForward className="w-5 h-5" />
+              </Button>
+            )}
+          </div>
         </div>
-        <Progress 
-          value={progress} 
-          className="h-2" 
-          aria-label={`Timer progress: ${Math.round(progress)}%`}
-        />
-      </div>
-    </Card>
+      </Card>
+    </div>
   );
 }

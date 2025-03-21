@@ -1,148 +1,245 @@
+/**
+ * Timer Management System
+ * 
+ * This context provides centralized timer state management with the following features:
+ * - Timer state tracking (idle, running, paused, break)
+ * - Session management with analytics integration
+ * - Break timer functionality
+ * - Progress tracking
+ */
+
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useSettings } from './SettingsContext';
-import { useTimerData } from './DataContext';
-import { Session } from '../types/timer';
-import { v4 as uuidv4 } from 'uuid';
+import { TimerStateType } from '../types/timer';
 
-type TimerState = 'idle' | 'running' | 'paused' | 'break';
-
-interface TimerContextType {
-  currentTime: number;
-  totalTime: number;
-  breakTime: number;
-  timerState: TimerState;
-  activePresetId?: string;
-  startTimer: (duration: number, presetId?: string) => void;
+interface TimerContextType extends TimerStateType {
+  startTimer: (duration: number, presetId?: string | null) => void;
   pauseTimer: () => void;
   resumeTimer: () => void;
   stopTimer: () => void;
   skipBreak: () => void;
+  updateTime: (time: number) => void;
 }
 
-const TimerContext = createContext<TimerContextType | undefined>(undefined);
+const defaultState: TimerStateType = {
+  currentTime: 0,
+  timerState: 'idle',
+  activePresetId: null,
+  completedSessions: 0,
+  totalFocusTime: 0,
+  totalBreakTime: 0,
+};
+
+// Create context with a default value that throws an error if accessed outside of provider
+const TimerContext = createContext<TimerContextType>({
+  ...defaultState,
+  startTimer: () => {
+    throw new Error('Timer context not initialized');
+  },
+  pauseTimer: () => {
+    throw new Error('Timer context not initialized');
+  },
+  resumeTimer: () => {
+    throw new Error('Timer context not initialized');
+  },
+  stopTimer: () => {
+    throw new Error('Timer context not initialized');
+  },
+  skipBreak: () => {
+    throw new Error('Timer context not initialized');
+  },
+  updateTime: () => {
+    throw new Error('Timer context not initialized');
+  },
+});
 
 export function TimerProvider({ children }: { children: React.ReactNode }) {
   const { settings } = useSettings();
-  const { data, updateData } = useTimerData();
-  const [currentTime, setCurrentTime] = useState(0);
-  const [totalTime, setTotalTime] = useState(0);
-  const [breakTime, setBreakTime] = useState(0);
-  const [timerState, setTimerState] = useState<TimerState>('idle');
-  const [activePresetId, setActivePresetId] = useState<string>();
-  const [startTime, setStartTime] = useState<Date>();
-  const [breakStartTime, setBreakStartTime] = useState<Date>();
-  const [breaks, setBreaks] = useState<number>(0);
+  const [timerState, setTimerState] = useState<TimerStateType>(defaultState);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const startTimeRef = useRef<number>(0);
+  const originalDurationRef = useRef<number>(0);
+  const lastUpdateRef = useRef<number>(Date.now());
 
-  const addSession = useCallback((completed: boolean) => {
-    const endTime = new Date();
-    const sessionDuration = startTime ? Math.floor((endTime.getTime() - startTime.getTime()) / 1000) : 0;
-    const totalBreakTime = breaks * (breakTime || 0);
-    const focusTime = Math.max(0, sessionDuration - totalBreakTime);
-
-    const newSession: Session = {
-      id: uuidv4(),
-      startTime: startTime?.toISOString() || new Date().toISOString(),
-      endTime: endTime.toISOString(),
-      duration: totalTime,
-      completed,
-      breaks,
-      focusTime,
-    };
-
-    updateData({
-      ...data,
-      sessions: [...data.sessions, newSession],
-      analytics: {
-        ...data.analytics,
-        totalSessions: data.analytics.totalSessions + 1,
-        totalFocusTime: data.analytics.totalFocusTime + focusTime,
-        completedSessions: data.analytics.completedSessions + (completed ? 1 : 0),
-        completionRate: ((data.analytics.completedSessions + (completed ? 1 : 0)) / (data.analytics.totalSessions + 1)) * 100,
-      }
-    });
-  }, [data, updateData, startTime, totalTime, breaks, breakTime]);
-
-  const startBreak = useCallback(() => {
-    setTimerState('break');
-    setCurrentTime(breakTime);
-    setBreakStartTime(new Date());
-    setBreaks(prev => prev + 1);
-  }, [breakTime]);
-
-  const startTimer = useCallback((duration: number, presetId?: string) => {
-    setCurrentTime(duration);
-    setTotalTime(duration);
-    setBreakTime(settings.presets.find(p => p.id === presetId)?.breakDuration || 300);
-    setTimerState('running');
-    setActivePresetId(presetId);
-    setStartTime(new Date());
-    setBreaks(0);
-  }, [settings.presets]);
-
-  const pauseTimer = useCallback(() => {
-    setTimerState('paused');
-  }, []);
-
-  const resumeTimer = useCallback(() => {
-    setTimerState('running');
-  }, []);
-
-  const stopTimer = useCallback(() => {
-    if (timerState !== 'idle') {
-      addSession(false);
-    }
-    setTimerState('idle');
-    setCurrentTime(0);
-    setTotalTime(0);
-    setBreakTime(0);
-    setActivePresetId(undefined);
-    setStartTime(undefined);
-    setBreakStartTime(undefined);
-    setBreaks(0);
-  }, [timerState, addSession]);
-
-  const skipBreak = useCallback(() => {
-    setTimerState('idle');
-    setCurrentTime(0);
-  }, []);
-
+  // Cleanup on unmount
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
 
-    if (timerState === 'running' || timerState === 'break') {
-      timer = setInterval(() => {
-        setCurrentTime(prev => {
-          if (prev <= 1) {
-            if (timerState === 'running') {
-              startBreak();
-            } else {
-              setTimerState('idle');
-              addSession(true);
-            }
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+  // Update document title with remaining time
+  useEffect(() => {
+    if (settings.showTimeInTitle && timerState.timerState !== 'idle') {
+      const minutes = Math.floor(timerState.currentTime / 60);
+      const seconds = timerState.currentTime % 60;
+      document.title = `${minutes}:${seconds.toString().padStart(2, '0')} - Timer`;
+    } else {
+      document.title = 'Timer';
+    }
+  }, [timerState.currentTime, timerState.timerState, settings.showTimeInTitle]);
+
+  const handleComplete = useCallback(() => {
+    const isBreak = timerState.timerState === 'break';
+    const elapsedTime = Math.floor((Date.now() - startTimeRef.current) / 1000);
+
+    setTimerState((prev: TimerStateType) => ({
+      ...prev,
+      completedSessions: isBreak ? prev.completedSessions : prev.completedSessions + 1,
+      totalFocusTime: isBreak ? prev.totalFocusTime : prev.totalFocusTime + elapsedTime,
+      totalBreakTime: isBreak ? prev.totalBreakTime + elapsedTime : prev.totalBreakTime,
+      timerState: 'idle',
+      currentTime: 0,
+    }));
+
+    // Handle notifications
+    if (settings.notificationsEnabled) {
+      new Notification(isBreak ? 'Break Complete!' : 'Focus Session Complete!', {
+        body: isBreak ? 'Ready to focus?' : 'Time for a break!',
+      });
     }
 
-    return () => clearInterval(timer);
-  }, [timerState, addSession, startBreak]);
+    // Play sound if enabled
+    if (settings.soundEnabled) {
+      const audio = new Audio('/complete.mp3');
+      audio.volume = settings.volume / 100;
+      audio.play();
+    }
 
-  const value = {
-    currentTime,
-    totalTime,
-    breakTime,
-    timerState,
-    activePresetId,
+    // Auto-start break or next session based on settings
+    if (!isBreak && settings.autoStartBreaks) {
+      const preset = settings.presets.find(p => p.id === timerState.activePresetId);
+      const breakDuration = preset?.breakDuration || 5 * 60;
+      startTimer(breakDuration, preset?.id || null);
+    } else if (isBreak && settings.autoStartNextSession) {
+      const preset = settings.presets.find(p => p.id === timerState.activePresetId);
+      if (preset) {
+        startTimer(preset.duration, preset.id);
+      }
+    }
+  }, [timerState.timerState, timerState.activePresetId, settings]);
+
+  const updateTime = useCallback((time: number): void => {
+    if (timerState.timerState === 'idle') return;
+    
+    const now = Date.now();
+    const timeDiff = now - lastUpdateRef.current;
+    lastUpdateRef.current = now;
+
+    // Ensure we don't skip more than one second
+    const timeDecrement = Math.min(Math.floor(timeDiff / 1000), 1);
+    const updatedTime = Math.max(0, Math.min(time - timeDecrement, originalDurationRef.current));
+    
+    setTimerState(prev => ({
+      ...prev,
+      currentTime: updatedTime
+    }));
+
+    if (updatedTime <= 0) {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      handleComplete();
+    }
+  }, [timerState.timerState, handleComplete]);
+
+  const startTimer = useCallback((duration: number, presetId?: string | null): void => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    originalDurationRef.current = duration;
+    startTimeRef.current = Date.now();
+    lastUpdateRef.current = Date.now();
+
+    setTimerState(prev => ({
+      ...prev,
+      currentTime: duration,
+      timerState: 'running',
+      activePresetId: presetId || null,
+    }));
+
+    timerRef.current = setInterval(() => {
+      updateTime(timerState.currentTime);
+    }, 1000);
+  }, [timerState.currentTime, updateTime]);
+
+  const pauseTimer = useCallback((): void => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    setTimerState(prev => ({ ...prev, timerState: 'paused' }));
+  }, []);
+
+  const resumeTimer = useCallback((): void => {
+    if (timerState.currentTime <= 0) return;
+
+    startTimeRef.current = Date.now() - (originalDurationRef.current - timerState.currentTime) * 1000;
+    lastUpdateRef.current = Date.now();
+    
+    setTimerState(prev => ({ 
+      ...prev, 
+      timerState: prev.timerState === 'break' ? 'break' : 'running' 
+    }));
+
+    timerRef.current = setInterval(() => {
+      updateTime(timerState.currentTime);
+    }, 1000);
+  }, [timerState.currentTime, updateTime]);
+
+  const stopTimer = useCallback((): void => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    const elapsedTime = Math.floor((Date.now() - startTimeRef.current) / 1000);
+    const isBreak = timerState.timerState === 'break';
+
+    setTimerState(prev => ({
+      ...prev,
+      currentTime: 0,
+      timerState: 'idle',
+      totalFocusTime: isBreak ? prev.totalFocusTime : prev.totalFocusTime + elapsedTime,
+      totalBreakTime: isBreak ? prev.totalBreakTime + elapsedTime : prev.totalBreakTime,
+    }));
+  }, [timerState.timerState]);
+
+  const skipBreak = useCallback((): void => {
+    if (timerState.timerState !== 'break') return;
+    
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    setTimerState(prev => ({
+      ...prev,
+      currentTime: 0,
+      timerState: 'idle',
+      totalBreakTime: prev.totalBreakTime + Math.floor((Date.now() - startTimeRef.current) / 1000),
+    }));
+
+    // Auto-start next session if enabled
+    if (settings.autoStartNextSession) {
+      const preset = settings.presets.find(p => p.id === timerState.activePresetId);
+      if (preset) {
+        startTimer(preset.duration, preset.id);
+      }
+    }
+  }, [timerState.timerState, timerState.activePresetId, settings.autoStartNextSession, settings.presets, startTimer]);
+
+  const value = useMemo<TimerContextType>(() => ({
+    ...timerState,
     startTimer,
     pauseTimer,
     resumeTimer,
     stopTimer,
     skipBreak,
-  };
+    updateTime,
+  }), [timerState, startTimer, pauseTimer, resumeTimer, stopTimer, skipBreak, updateTime]);
 
   return (
     <TimerContext.Provider value={value}>
@@ -151,7 +248,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useTimer() {
+// Custom hook to use timer context with type safety
+export function useTimer(): TimerContextType {
   const context = useContext(TimerContext);
   if (context === undefined) {
     throw new Error('useTimer must be used within a TimerProvider');
