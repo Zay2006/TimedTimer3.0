@@ -7,11 +7,12 @@ import { Switch } from '../components/ui/switch';
 import { Label } from '../components/ui/label';
 import { Slider } from '../components/ui/slider';
 import { Separator } from '../components/ui/separator';
-import { Moon, Sun, Volume2, Bell, Music, Settings2, Timer } from 'lucide-react';
+import { Moon, Sun, Volume2, Bell, Music, Settings2, Timer, ArrowLeft } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import TimerSettings from '../components/settings/TimerSettings';
 import TimerAdvancedSettings from '../components/settings/TimerAdvancedSettings';
+import Link from 'next/link';
 
 export default function SettingsPage() {
   const { settings, updateSettings } = useSettings();
@@ -32,7 +33,12 @@ export default function SettingsPage() {
 
   return (
     <div className="container max-w-4xl py-8 space-y-8">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" asChild className="mr-2">
+          <Link href="/">
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+        </Button>
         <Settings2 className="w-6 h-6" />
         <h1 className="text-3xl font-bold">Settings</h1>
       </div>

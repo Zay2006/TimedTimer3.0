@@ -123,16 +123,12 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   }, [timerState.timerState, timerState.activePresetId, settings]);
 
-  const updateTime = useCallback((time: number): void => {
+  const updateTime = useCallback((initialTime: number): void => {
     if (timerState.timerState === 'idle') return;
     
     const now = Date.now();
-    const timeDiff = now - lastUpdateRef.current;
-    lastUpdateRef.current = now;
-
-    // Ensure we don't skip more than one second
-    const timeDecrement = Math.min(Math.floor(timeDiff / 1000), 1);
-    const updatedTime = Math.max(0, Math.min(time - timeDecrement, originalDurationRef.current));
+    const elapsed = Math.floor((now - startTimeRef.current) / 1000);
+    const updatedTime = Math.max(0, originalDurationRef.current - elapsed);
     
     setTimerState(prev => ({
       ...prev,
@@ -154,7 +150,6 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
     originalDurationRef.current = duration;
     startTimeRef.current = Date.now();
-    lastUpdateRef.current = Date.now();
 
     setTimerState(prev => ({
       ...prev,
@@ -163,10 +158,11 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       activePresetId: presetId || null,
     }));
 
+    // Use a more frequent interval for smoother updates
     timerRef.current = setInterval(() => {
-      updateTime(timerState.currentTime);
-    }, 1000);
-  }, [timerState.currentTime, updateTime]);
+      updateTime(duration);
+    }, 100);
+  }, [updateTime]);
 
   const pauseTimer = useCallback((): void => {
     if (timerRef.current) {
@@ -179,7 +175,6 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     if (timerState.currentTime <= 0) return;
 
     startTimeRef.current = Date.now() - (originalDurationRef.current - timerState.currentTime) * 1000;
-    lastUpdateRef.current = Date.now();
     
     setTimerState(prev => ({ 
       ...prev, 
@@ -188,7 +183,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
     timerRef.current = setInterval(() => {
       updateTime(timerState.currentTime);
-    }, 1000);
+    }, 100);
   }, [timerState.currentTime, updateTime]);
 
   const stopTimer = useCallback((): void => {

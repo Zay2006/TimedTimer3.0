@@ -12,6 +12,7 @@ import SpotifyPlayer from './components/spotify/SpotifyPlayer';
 import { Button } from './components/ui/button';
 import { Settings, Moon, Sun } from 'lucide-react';
 import Link from 'next/link';
+import { Greeting } from './components/Greeting';
 
 export default function Home() {
   const { settings, updateSettings, isDarkMode } = useSettings();
@@ -28,9 +29,14 @@ export default function Home() {
       <header className="border-b">
         <div className="container max-w-6xl mx-auto py-4">
           <div className="flex items-center justify-between px-4">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              Focus Timer
-            </h1>
+            <div className="space-y-1">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                Focus Timer
+              </h1>
+              <p className="text-sm">
+                <Greeting />, let's focus!
+              </p>
+            </div>
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
