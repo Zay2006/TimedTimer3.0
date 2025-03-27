@@ -95,7 +95,7 @@ export default function SettingsPanel() {
   const handleVolumeChange = (value: number[]) => {
     updateSettings({
       ...settings,
-      volume: value[0],
+      volume: value[0] / 100 // Convert percentage to decimal
     });
   };
 
@@ -215,12 +215,15 @@ export default function SettingsPanel() {
 
           {settings.soundEnabled && (
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between">
                 <Volume2 className="w-4 h-4" />
                 <Label>Volume</Label>
+                <div className="text-sm text-muted-foreground">
+                  {Math.round(settings.volume * 100)}%
+                </div>
               </div>
               <Slider
-                value={[settings.volume]}
+                value={[settings.volume * 100]}
                 onValueChange={handleVolumeChange}
                 max={100}
                 step={1}

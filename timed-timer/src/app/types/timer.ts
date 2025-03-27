@@ -18,6 +18,7 @@ export interface TimerPreset {
 
 export interface TimerStateType {
   currentTime: number;  // in seconds
+  totalTime: number;  // in seconds
   timerState: 'idle' | 'running' | 'paused' | 'break';
   activePresetId: string | null;
   completedSessions: number;
@@ -25,15 +26,46 @@ export interface TimerStateType {
   totalBreakTime: number;  // in seconds
 }
 
+export interface AnalyticsConfig {
+  metrics: {
+    focusScore: {
+      factors: string[];
+      weights: number[];
+    };
+    productivity: {
+      factors: string[];
+      weights: number[];
+    };
+  };
+  timeRanges: {
+    daily: {
+      intervals: string[];
+      aggregation: string;
+    };
+    weekly: {
+      intervals: string[];
+      aggregation: string;
+    };
+    monthly: {
+      intervals: string[];
+      aggregation: string;
+    };
+  };
+}
+
 export interface TimerSettings {
   soundEnabled: boolean;
+  /** Volume level between 0 and 1 */
   volume: number;
   notificationsEnabled: boolean;
   theme: 'light' | 'dark' | 'system';
   presets: TimerPreset[];
   spotifyEnabled: boolean;
   spotifyToken: string | null;
+  youtubeEnabled: boolean;
+  analyticsConfig: AnalyticsConfig;
   // Timer-specific settings
+  defaultDuration: number;
   autoStartBreaks: boolean;
   autoStartNextSession: boolean;
   longBreakInterval: number;  // number of sessions before long break

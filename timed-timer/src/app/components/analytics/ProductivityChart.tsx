@@ -29,7 +29,7 @@ export function ProductivityChart({ timeRange }: ProductivityChartProps) {
       })
       .map(stat => ({
         date: new Date(stat.date).toLocaleDateString(),
-        score: Math.round(stat.metrics.score),
+        productivityScore: Math.round(stat.metrics.productivityScore),
         focusHours: +(stat.metrics.focusTime / 3600).toFixed(1),
         sessions: stat.metrics.completedSessions
       }));
@@ -48,7 +48,7 @@ export function ProductivityChart({ timeRange }: ProductivityChartProps) {
           <Line
             yAxisId="left"
             type="monotone"
-            dataKey="score"
+            dataKey="productivityScore"
             stroke="#8884d8"
             name="Productivity Score"
           />

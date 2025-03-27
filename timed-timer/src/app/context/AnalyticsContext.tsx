@@ -107,7 +107,7 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
       // Implementation would analyze session timestamps and aggregate data
       // This is a simplified version
       Object.keys(patterns).forEach(timeOfDay => {
-        patterns[timeOfDay].totalProductivity += stat.metrics.score;
+        patterns[timeOfDay].totalProductivity += stat.metrics.productivityScore;
         patterns[timeOfDay].count++;
       });
     });
@@ -137,9 +137,9 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
 
     if (format === 'csv') {
       // Convert data to CSV format
-      const csvContent = 'Date,Focus Time,Break Time,Completed Sessions,Score\n' +
+      const csvContent = 'Date,Focus Time,Break Time,Completed Sessions,Incomplete Sessions,Productivity Score\n' +
         relevantData.dailyStats.map(stat => 
-          `${stat.date},${stat.metrics.focusTime},${stat.metrics.breakTime},${stat.metrics.completedSessions},${stat.metrics.score}`
+          `${stat.date},${stat.metrics.focusTime},${stat.metrics.breakTime},${stat.metrics.completedSessions},${stat.metrics.incompleteSessions},${stat.metrics.productivityScore}`
         ).join('\n');
       return new Blob([csvContent], { type: 'text/csv' });
     } else {
@@ -157,8 +157,9 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
       focusTime: timer.totalFocusTime,
       breakTime: timer.totalBreakTime,
       completedSessions: timer.completedSessions,
+      incompleteSessions: 0, // This will be updated when we track incomplete sessions
       achievements: 0, // Would be updated from achievements system
-      score: calculateProductivityScore(
+      productivityScore: calculateProductivityScore(
         timer.totalFocusTime,
         timer.completedSessions,
         1 // Today's consistency is always 1

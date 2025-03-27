@@ -29,13 +29,41 @@ const defaultPresets: TimerPreset[] = [
 
 const defaultSettings: TimerSettings = {
   soundEnabled: true,
-  volume: 50,
+  volume: 0.5, // Changed from 50 to 0.5 (50%) for HTMLMediaElement compatibility
   notificationsEnabled: true,
   theme: 'system',
   presets: defaultPresets,
   spotifyEnabled: false,
   spotifyToken: null,
+  youtubeEnabled: false,
+  analyticsConfig: {
+    metrics: {
+      focusScore: {
+        factors: ['duration', 'consistency', 'completion'],
+        weights: [0.4, 0.3, 0.3]
+      },
+      productivity: {
+        factors: ['focusTime', 'completedSessions', 'achievements'],
+        weights: [0.5, 0.3, 0.2]
+      }
+    },
+    timeRanges: {
+      daily: {
+        intervals: ['hour'],
+        aggregation: 'sum'
+      },
+      weekly: {
+        intervals: ['day'],
+        aggregation: 'average'
+      },
+      monthly: {
+        intervals: ['week'],
+        aggregation: 'average'
+      }
+    }
+  },
   // Timer-specific settings
+  defaultDuration: 25 * 60, // 25 minutes by default
   autoStartBreaks: true,
   autoStartNextSession: false,
   longBreakInterval: 4,

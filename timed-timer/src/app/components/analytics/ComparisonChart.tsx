@@ -43,7 +43,7 @@ export function ComparisonChart({ timeRange }: ComparisonChartProps) {
 
     // Calculate averages for both periods
     const calculateAverages = (data: typeof currentPeriodData) => ({
-      avgScore: data.reduce((sum, stat) => sum + stat.metrics.score, 0) / (data.length || 1),
+      avgScore: data.reduce((sum, stat) => sum + stat.metrics.productivityScore, 0) / (data.length || 1),
       avgFocusHours: data.reduce((sum, stat) => sum + stat.metrics.focusTime / 3600, 0) / (data.length || 1),
       avgSessions: data.reduce((sum, stat) => sum + stat.metrics.completedSessions, 0) / (data.length || 1)
     });

@@ -107,7 +107,7 @@ export function AchievementProvider({ children }: { children: React.ReactNode })
     // Play sound if enabled
     if (settings.soundEnabled) {
       const audio = new Audio('/sounds/achievement.mp3');
-      audio.volume = settings.volume / 100;
+      audio.volume = settings.volume; // Volume is already between 0-1
       audio.play();
     }
   }, [settings]);
