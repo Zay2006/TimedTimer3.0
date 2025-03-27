@@ -1,8 +1,24 @@
  "use client";
 
+/**
+ * Settings Management System
+ * 
+ * This context provides centralized settings management with the following features:
+ * - Timer presets management
+ * - Theme customization (light/dark mode)
+ * - Sound settings
+ * - Notification preferences
+ * - Data persistence
+ * - Spotify integration settings
+ */
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { TimerPreset, TimerSettings } from '../types/timer';
 
+/**
+ * Default timer presets configuration
+ * @constant
+ */
 const defaultPresets: TimerPreset[] = [
   {
     id: 'pomodoro',
@@ -27,6 +43,10 @@ const defaultPresets: TimerPreset[] = [
   },
 ];
 
+/**
+ * Default application settings
+ * @constant
+ */
 const defaultSettings: TimerSettings = {
   soundEnabled: true,
   volume: 0.5, // Changed from 50 to 0.5 (50%) for HTMLMediaElement compatibility
@@ -72,17 +92,51 @@ const defaultSettings: TimerSettings = {
   showTimeInTitle: true,
 };
 
+/**
+ * Settings context type definition
+ * @interface
+ */
 interface SettingsContextType {
+  /**
+   * Current application settings
+   */
   settings: TimerSettings;
+  /**
+   * Updates the application settings
+   * @param {TimerSettings} settings - New settings to apply
+   */
   updateSettings: (settings: TimerSettings) => void;
+  /**
+   * Indicates whether dark mode is enabled
+   */
   isDarkMode: boolean;
+  /**
+   * Updates a timer preset
+   * @param {TimerPreset} preset - Updated preset
+   */
   updatePreset: (preset: TimerPreset) => void;
+  /**
+   * Deletes a timer preset
+   * @param {string} presetId - ID of the preset to delete
+   */
   deletePreset: (presetId: string) => void;
+  /**
+   * Adds a new timer preset
+   * @param {TimerPreset} preset - New preset to add
+   */
   addPreset: (preset: TimerPreset) => void;
 }
 
+/**
+ * Settings context
+ * @constant
+ */
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
+/**
+ * Settings provider component
+ * @param {React.ReactNode} children - Child components
+ */
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<TimerSettings>(defaultSettings);
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -120,10 +174,18 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     return () => mediaQuery.removeEventListener('change', handler);
   }, [settings.theme]);
 
+  /**
+   * Updates the application settings
+   * @param {TimerSettings} newSettings - New settings to apply
+   */
   const updateSettings = (newSettings: TimerSettings) => {
     setSettings(newSettings);
   };
 
+  /**
+   * Updates a timer preset
+   * @param {TimerPreset} preset - Updated preset
+   */
   const updatePreset = (preset: TimerPreset) => {
     const updatedPresets = settings.presets.map(p => 
       p.id === preset.id ? preset : p
@@ -131,11 +193,19 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     updateSettings({ ...settings, presets: updatedPresets });
   };
 
+  /**
+   * Deletes a timer preset
+   * @param {string} presetId - ID of the preset to delete
+   */
   const deletePreset = (presetId: string) => {
     const updatedPresets = settings.presets.filter(p => p.id !== presetId);
     updateSettings({ ...settings, presets: updatedPresets });
   };
 
+  /**
+   * Adds a new timer preset
+   * @param {TimerPreset} preset - New preset to add
+   */
   const addPreset = (preset: TimerPreset) => {
     updateSettings({
       ...settings,
@@ -157,6 +227,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * Hook to access the settings context
+ */
 export function useSettings() {
   const context = useContext(SettingsContext);
   if (context === undefined) {

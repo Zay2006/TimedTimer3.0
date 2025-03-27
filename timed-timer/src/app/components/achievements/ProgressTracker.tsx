@@ -5,15 +5,52 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAchievements } from '@/app/context/AchievementContext';
 import { Trophy, Flame, Clock, Target } from 'lucide-react';
 
+/**
+ * ProgressTracker Component
+ * 
+ * A dashboard component that displays overall achievement progress and key statistics.
+ * Provides a quick overview of the user's accomplishments and current status.
+ * 
+ * Features:
+ * - Overall achievement statistics
+ * - Focus time tracking
+ * - Streak monitoring
+ * - Visual indicators with icons
+ * - Responsive grid layout
+ * 
+ * Statistics Displayed:
+ * - Total achievements unlocked
+ * - Current streak
+ * - Total focus time
+ * - Sessions completed
+ * 
+ * @component
+ * @returns {JSX.Element} Rendered ProgressTracker component
+ * 
+ * @example
+ * ```tsx
+ * <ProgressTracker />
+ * ```
+ */
 export function ProgressTracker() {
   const { stats, achievements } = useAchievements();
 
+  /**
+   * Formats seconds into a human-readable time string
+   * @param {number} seconds - Total seconds to format
+   * @returns {string} Formatted time string in "Xh Ym" format
+   */
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     return `${hours}h ${minutes}m`;
   };
 
+  /**
+   * Array of statistics to display in the tracker
+   * Each stat includes title, value, and associated icon
+   * @constant
+   */
   const stats_display = [
     {
       title: "Total Achievements",
@@ -41,6 +78,10 @@ export function ProgressTracker() {
     }
   ];
 
+  /**
+   * Retrieves the 3 most recent achievements
+   * @type {Array} Recent achievements
+   */
   const recentAchievements = achievements
     .sort((a, b) => new Date(b.unlockedAt).getTime() - new Date(a.unlockedAt).getTime())
     .slice(0, 3);

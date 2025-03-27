@@ -13,10 +13,39 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { useAnalytics } from '../../context/AnalyticsContext';
 
+/**
+ * Interface for FocusChart component props
+ * @interface FocusChartProps
+ * @property {'daily' | 'weekly' | 'monthly'} timeRange - Time range for data aggregation
+ */
 interface FocusChartProps {
   timeRange: 'daily' | 'weekly' | 'monthly';
 }
 
+/**
+ * FocusChart Component
+ * 
+ * A responsive area chart component that visualizes focus session data over time.
+ * Displays focus duration trends based on the selected time range (daily, weekly, or monthly).
+ * Integrates with the analytics context to fetch and display session data.
+ * 
+ * Features:
+ * - Responsive design that adapts to container width
+ * - Smooth area chart visualization
+ * - Interactive tooltips showing detailed data points
+ * - Customizable time range views
+ * - Automatic data aggregation based on time range
+ * 
+ * @component
+ * @param {FocusChartProps} props - Component props
+ * @param {'daily' | 'weekly' | 'monthly'} props.timeRange - Time range for data aggregation
+ * @returns {JSX.Element} Rendered FocusChart component
+ * 
+ * @example
+ * ```tsx
+ * <FocusChart timeRange="weekly" />
+ * ```
+ */
 export function FocusChart({ timeRange }: FocusChartProps) {
   const { analyticsData } = useAnalytics();
 

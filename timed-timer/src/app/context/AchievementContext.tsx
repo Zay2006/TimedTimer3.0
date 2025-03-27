@@ -18,6 +18,8 @@ interface AchievementContextType {
   checkAchievements: () => void;
   getNextAchievement: (typeId: string) => Achievement | null;
   getProgress: (typeId: string) => number;
+  getRecentAchievements: (count?: number) => Achievement[];
+  getCategoryProgress: (category: string) => number;
 }
 
 const defaultStats: AchievementStats = {
@@ -35,13 +37,15 @@ const defaultContext: AchievementContextType = {
   stats: defaultStats,
   checkAchievements: () => {},
   getNextAchievement: () => null,
-  getProgress: () => 0
+  getProgress: () => 0,
+  getRecentAchievements: () => [],
+  getCategoryProgress: () => 0
 };
 
 const AchievementContext = createContext<AchievementContextType>(defaultContext);
 
 export function AchievementProvider({ children }: { children: React.ReactNode }) {
-  const { totalFocusTime, completedSessions } = useTimer();
+  const { totalFocusTime, completedSessions, currentSession } = useTimer();
   const { settings } = useSettings();
   const { analyticsData } = useAnalytics();
   const [achievements, setAchievements] = useState<Achievement[]>([]);
@@ -100,14 +104,14 @@ export function AchievementProvider({ children }: { children: React.ReactNode })
     if (settings.notificationsEnabled) {
       new Notification('Achievement Unlocked! 🏆', {
         body: `${newAchievement.name}\n${newAchievement.reward}`,
-        icon: '/achievements/${newAchievement.icon}.png'
+        icon: `/achievements/${newAchievement.icon}.png`
       });
     }
 
     // Play sound if enabled
     if (settings.soundEnabled) {
       const audio = new Audio('/sounds/achievement.mp3');
-      audio.volume = settings.volume; // Volume is already between 0-1
+      audio.volume = settings.volume;
       audio.play();
     }
   }, [settings]);
@@ -133,57 +137,84 @@ export function AchievementProvider({ children }: { children: React.ReactNode })
       }
     });
 
-    // Check Streak Champion achievements
-    const currentStreak = analyticsData.dailyStats.reduce((streak, stat) => {
-      if (stat.metrics.completedSessions > 0) return streak + 1;
-      return 0;
-    }, 0);
+    // Check time-based achievements
+    const currentHour = new Date().getHours();
+    if (currentHour >= 5 && currentHour <= 9) {
+      // Early Bird achievement
+      const earlyBirdSessions = analyticsData.dailyStats
+        .filter(stat => {
+          const sessionHour = new Date(stat.date).getHours();
+          return sessionHour >= 5 && sessionHour <= 9;
+        }).length;
 
-    achievementTypes.streakChampion.tiers.forEach(tier => {
-      if (currentStreak >= tier.requirement) {
-        const currentProgress = progress.streakChampion?.currentTier || 0;
+      achievementTypes.earlyBird.tiers.forEach(tier => {
+        if (earlyBirdSessions >= tier.requirement) {
+          const currentProgress = progress.earlyBird?.currentTier || 0;
+          if (tier.level > currentProgress) {
+            unlockAchievement('earlyBird', tier.level);
+          }
+        }
+      });
+    } else if (currentHour >= 22 || currentHour <= 4) {
+      // Night Owl achievement
+      const nightOwlSessions = analyticsData.dailyStats
+        .filter(stat => {
+          const sessionHour = new Date(stat.date).getHours();
+          return sessionHour >= 22 || sessionHour <= 4;
+        }).length;
+
+      achievementTypes.nightOwl.tiers.forEach(tier => {
+        if (nightOwlSessions >= tier.requirement) {
+          const currentProgress = progress.nightOwl?.currentTier || 0;
+          if (tier.level > currentProgress) {
+            unlockAchievement('nightOwl', tier.level);
+          }
+        }
+      });
+    }
+
+    // Check Weekend Warrior achievement
+    const weekendSessions = analyticsData.dailyStats
+      .filter(stat => {
+        const day = new Date(stat.date).getDay();
+        return day === 0 || day === 6; // Sunday or Saturday
+      }).length;
+
+    achievementTypes.weekendWarrior.tiers.forEach(tier => {
+      if (weekendSessions >= tier.requirement) {
+        const currentProgress = progress.weekendWarrior?.currentTier || 0;
         if (tier.level > currentProgress) {
-          unlockAchievement('streakChampion', tier.level);
-          setProgress(prev => ({
-            ...prev,
-            streakChampion: {
-              typeId: 'streakChampion',
-              currentTier: tier.level,
-              progress: currentStreak
-            }
-          }));
+          unlockAchievement('weekendWarrior', tier.level);
         }
       }
     });
 
-    // Check Consistency King achievements
-    const totalSessions = completedSessions;
-    achievementTypes.consistencyKing.tiers.forEach(tier => {
-      if (totalSessions >= tier.requirement) {
-        const currentProgress = progress.consistencyKing?.currentTier || 0;
-        if (tier.level > currentProgress) {
-          unlockAchievement('consistencyKing', tier.level);
-          setProgress(prev => ({
-            ...prev,
-            consistencyKing: {
-              typeId: 'consistencyKing',
-              currentTier: tier.level,
-              progress: totalSessions
-            }
-          }));
+    // Check Perfect Timer achievement
+    if (currentSession?.completed && !currentSession.interrupted) {
+      const perfectSessions = analyticsData.dailyStats
+        .filter(stat => stat.metrics.completedSessions > 0 && !stat.metrics.interrupted)
+        .length;
+
+      achievementTypes.perfectTimer.tiers.forEach(tier => {
+        if (perfectSessions >= tier.requirement) {
+          const currentProgress = progress.perfectTimer?.currentTier || 0;
+          if (tier.level > currentProgress) {
+            unlockAchievement('perfectTimer', tier.level);
+          }
         }
-      }
-    });
+      });
+    }
 
     // Update stats
     setStats(prev => ({
       ...prev,
-      currentStreak,
-      longestStreak: Math.max(prev.longestStreak, currentStreak),
       focusTimeTotal: totalFocusTime,
-      sessionsCompleted: completedSessions
+      sessionsCompleted: completedSessions,
+      dailyGoalsReached: Object.values(analyticsData.dailyStats).filter(
+        stat => stat.metrics.completedSessions >= stat.metrics.targetSessions
+      ).length
     }));
-  }, [totalFocusTime, completedSessions, analyticsData, progress, unlockAchievement]);
+  }, [totalFocusTime, completedSessions, analyticsData, progress, unlockAchievement, currentSession]);
 
   // Check achievements whenever relevant data changes
   useEffect(() => {
@@ -222,6 +253,26 @@ export function AchievementProvider({ children }: { children: React.ReactNode })
     return Math.min(100, (currentProgress / nextTier.requirement) * 100);
   }, [progress]);
 
+  const getRecentAchievements = useCallback((count: number = 5): Achievement[] => {
+    return achievements
+      .sort((a, b) => new Date(b.unlockedAt).getTime() - new Date(a.unlockedAt).getTime())
+      .slice(0, count);
+  }, [achievements]);
+
+  const getCategoryProgress = useCallback((category: string): number => {
+    const categoryAchievements = Object.entries(achievementTypes)
+      .filter(([_, type]) => type.icon === category)
+      .map(([typeId]) => typeId);
+
+    const totalTiers = categoryAchievements.reduce((sum, typeId) => 
+      sum + achievementTypes[typeId].tiers.length, 0);
+
+    const unlockedTiers = categoryAchievements.reduce((sum, typeId) => 
+      sum + (progress[typeId]?.currentTier || 0), 0);
+
+    return totalTiers > 0 ? (unlockedTiers / totalTiers) * 100 : 0;
+  }, [progress]);
+
   return (
     <AchievementContext.Provider value={{
       achievements,
@@ -229,7 +280,9 @@ export function AchievementProvider({ children }: { children: React.ReactNode })
       stats,
       checkAchievements,
       getNextAchievement,
-      getProgress
+      getProgress,
+      getRecentAchievements,
+      getCategoryProgress
     }}>
       {children}
     </AchievementContext.Provider>

@@ -9,6 +9,47 @@ import { formatTime } from '../lib/utils';
 import { Progress } from './ui/progress';
 import { Play, Pause, Square, SkipForward } from 'lucide-react';
 
+/**
+ * TimerDisplay Component
+ * 
+ * The core timer display component that shows the current session time and controls.
+ * Provides visual feedback and interactive controls for timer management.
+ * 
+ * Features:
+ * - Real-time countdown display
+ * - Circular progress indicator
+ * - Play/Pause/Stop controls
+ * - Break timer integration
+ * - Skip break functionality
+ * - Sound notifications
+ * - Keyboard shortcuts
+ * 
+ * Timer States:
+ * - IDLE: Initial state, timer not started
+ * - RUNNING: Timer actively counting down
+ * - PAUSED: Timer temporarily stopped
+ * - BREAK: Break timer active
+ * 
+ * Performance Optimizations:
+ * - Debounced button clicks
+ * - Memoized callback handlers
+ * - Proper cleanup on unmount
+ * - Efficient state updates
+ * 
+ * Accessibility:
+ * - Keyboard navigation support
+ * - ARIA labels for controls
+ * - Visual and audio feedback
+ * - Focus management
+ * 
+ * @component
+ * @returns {JSX.Element} Rendered TimerDisplay component
+ * 
+ * @example
+ * ```tsx
+ * <TimerDisplay />
+ * ```
+ */
 export default function TimerDisplay() {
   const { currentTime, totalTime, timerState, startTimer, pauseTimer, resumeTimer, stopTimer, skipBreak } = useTimer();
   const { settings } = useSettings();
@@ -17,7 +58,10 @@ export default function TimerDisplay() {
   const progress = totalTime > 0 ? ((totalTime - currentTime) / totalTime) * 100 : 0;
   const timeDisplay = formatTime(currentTime);
 
-  // Debounce button clicks to prevent choppy state changes
+  /**
+   * Debounces button clicks to prevent choppy state changes
+   * @param {() => void} action - The timer action to execute
+   */
   const handleButtonClick = useCallback((action: () => void) => {
     if (buttonRef.current) {
       buttonRef.current.disabled = true;
@@ -30,6 +74,10 @@ export default function TimerDisplay() {
     }
   }, []);
 
+  /**
+   * Returns a message based on the current timer state
+   * @returns {string} The state message
+   */
   const getStateMessage = () => {
     switch (timerState) {
       case 'running':

@@ -1,9 +1,12 @@
+import type { Achievement, AchievementProgress, AchievementStats } from './achievements';
+
 export interface Session {
   id: string;
   startTime: string;
   endTime?: string;
   duration: number;
   completed: boolean;
+  interrupted: boolean;
   breaks: number;
   focusTime: number;
 }
@@ -74,36 +77,66 @@ export interface TimerSettings {
   showTimeInTitle: boolean;
 }
 
-export interface SessionStats {
-  id: string;
-  startTime: string;
-  endTime: string;
-  duration: number;  // in seconds
-  breakDuration: number;  // in seconds
-  presetId: string | null;
-  completed: boolean;
+export interface TimerContextType {
+  currentSession: Session | null;
+  totalFocusTime: number;
+  completedSessions: number;
+  startTimer: (duration: number) => void;
+  pauseTimer: () => void;
+  resumeTimer: () => void;
+  stopTimer: () => void;
+  resetTimer: () => void;
+  addBreak: () => void;
+  isRunning: boolean;
+  isPaused: boolean;
+  timeLeft: number;
+  progress: number;
+}
+
+export interface ProductivityMetrics {
+  completedSessions: number;
   interrupted: boolean;
+  focusTime: number;
+  breaks: number;
+  achievements: number;
+  productivityScore: number;
+  targetSessions: number;
+}
+
+export interface DailyStats {
+  date: string;
+  metrics: ProductivityMetrics;
+}
+
+export interface WeeklyStats {
+  weekStart: string;
+  weekEnd: string;
+  metrics: ProductivityMetrics;
+}
+
+export interface MonthlyStats {
+  monthStart: string;
+  monthEnd: string;
+  metrics: ProductivityMetrics;
 }
 
 export interface Analytics {
-  totalSessions: number;
+  dailyStats: DailyStats[];
+  weeklyStats: WeeklyStats[];
+  monthlyStats: MonthlyStats[];
   totalFocusTime: number;
-  completedSessions: number;
+  totalSessions: number;
+  averageSessionLength: number;
   completionRate: number;
-  longestStreak: number;
-  currentStreak: number;
-  bestFocusTime: number;
-  averageFocusTime: number;
-  dailyGoals: {
-    [date: string]: {
-      completed: boolean;
-      focusTime: number;
-      sessions: number;
-    };
-  };
+  productivityScore: number;
 }
 
 export interface TimerData {
   sessions: Session[];
   analytics: Analytics;
+  achievements: Achievement[];
+  achievementProgress: Record<string, AchievementProgress>;
+  achievementStats: AchievementStats;
 }
+
+export * from './achievements';

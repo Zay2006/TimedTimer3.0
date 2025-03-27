@@ -88,5 +88,55 @@ export const achievementTypes: Record<string, AchievementType> = {
       { level: 2, requirement: 85, reward: "Advanced Productivity Badge" },
       { level: 3, requirement: 95, reward: "Elite Productivity Badge" }
     ]
+  },
+  earlyBird: {
+    title: "Early Bird",
+    description: "Start your focus sessions early",
+    icon: "sun",
+    tiers: [
+      { level: 1, requirement: 5, reward: "Morning Starter Badge" },
+      { level: 2, requirement: 15, reward: "Sunrise Champion Badge" },
+      { level: 3, requirement: 30, reward: "Dawn Master Badge" }
+    ]
+  },
+  nightOwl: {
+    title: "Night Owl",
+    description: "Master late-night focus sessions",
+    icon: "moon",
+    tiers: [
+      { level: 1, requirement: 5, reward: "Evening Focus Badge" },
+      { level: 2, requirement: 15, reward: "Midnight Scholar Badge" },
+      { level: 3, requirement: 30, reward: "Night Master Badge" }
+    ]
+  },
+  weekendWarrior: {
+    title: "Weekend Warrior",
+    description: "Stay productive during weekends",
+    icon: "calendar",
+    tiers: [
+      { level: 1, requirement: 4, reward: "Weekend Starter Badge" },
+      { level: 2, requirement: 8, reward: "Weekend Champion Badge" },
+      { level: 3, requirement: 12, reward: "Weekend Master Badge" }
+    ]
+  },
+  perfectTimer: {
+    title: "Perfect Timer",
+    description: "Complete sessions without interruptions",
+    icon: "check-circle",
+    tiers: [
+      { level: 1, requirement: 5, reward: "Focus Discipline Badge" },
+      { level: 2, requirement: 15, reward: "Focus Master Badge" },
+      { level: 3, requirement: 30, reward: "Focus Legend Badge" }
+    ]
+  },
+  goalSeeker: {
+    title: "Goal Seeker",
+    description: "Reach your daily focus goals",
+    icon: "target",
+    tiers: [
+      { level: 1, requirement: 7, reward: "Goal Starter Badge" },
+      { level: 2, requirement: 14, reward: "Goal Champion Badge" },
+      { level: 3, requirement: 30, reward: "Goal Master Badge" }
+    ]
   }
 };

@@ -17,13 +17,25 @@ import {
 import { Achievement } from '../../types/achievements';
 import { useAchievements } from '../../context/AchievementContext';
 
+/**
+ * Interface for AchievementCard component props
+ * @interface AchievementCardProps
+ * @property {string} typeId - Unique identifier for the achievement type
+ * @property {Achievement} [achievement] - Achievement data if already earned
+ * @property {LucideIcon} [icon] - Icon component to display for the achievement
+ * @property {number} [progress] - Current progress towards the achievement (0-100)
+ */
 interface AchievementCardProps {
   typeId: string;
-  achievement: Achievement;
+  achievement?: Achievement;
   icon?: LucideIcon;
   progress?: number;
 }
 
+/**
+ * Mapping of achievement types to their corresponding Lucide icons
+ * @constant
+ */
 const icons: Record<string, LucideIcon> = {
   target: Target,
   flame: Flame,
@@ -33,6 +45,42 @@ const icons: Record<string, LucideIcon> = {
   trophy: Trophy
 };
 
+/**
+ * AchievementCard Component
+ * 
+ * A card component that displays achievement information and progress.
+ * Supports both earned and in-progress achievements with visual feedback.
+ * 
+ * Features:
+ * - Visual representation of achievement status
+ * - Progress bar for incomplete achievements
+ * - Dynamic icon display based on achievement type
+ * - Animated progress indicators
+ * - Responsive design with proper spacing
+ * 
+ * Visual States:
+ * - Earned: Shows completion status with trophy icon
+ * - In Progress: Displays current progress with progress bar
+ * - Locked: Indicates requirements for unlocking
+ * 
+ * @component
+ * @param {AchievementCardProps} props - Component props
+ * @param {string} props.typeId - Unique identifier for the achievement type
+ * @param {Achievement} [props.achievement] - Achievement data if already earned
+ * @param {LucideIcon} [props.icon] - Icon component to display
+ * @param {number} [props.progress] - Current progress towards achievement
+ * @returns {JSX.Element} Rendered AchievementCard component
+ * 
+ * @example
+ * ```tsx
+ * <AchievementCard
+ *   typeId="daily_streak"
+ *   achievement={userAchievement}
+ *   icon={Flame}
+ *   progress={75}
+ * />
+ * ```
+ */
 export function AchievementCard({ typeId, achievement, icon, progress }: AchievementCardProps) {
   const { achievements, getNextAchievement, getProgress } = useAchievements();
   
