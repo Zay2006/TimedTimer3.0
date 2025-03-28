@@ -43,19 +43,19 @@ export default function AnalyticsCharts({ type }: ChartProps) {
   const dailyData = days.map((_, index) => {
     const date = new Date();
     date.setDate(date.getDate() - (6 - index));
-    const dayData = data.sessions.filter(session => {
-      const sessionDate = new Date(session.startTime);
-      return sessionDate.toDateString() === date.toDateString();
-    });
+    const dateStr = date.toISOString().split('T')[0];
+    const dayStats = data.analytics.dailyStats.find(stat => stat.date === dateStr)?.metrics;
+
+    if (!dayStats) return 0;
 
     if (type === 'focus') {
-      // Calculate total focus time in hours
-      return dayData.reduce((acc, session) => acc + (session.focusTime / 3600), 0);
+      // Return focus time in hours
+      return dayStats.focusTime / 3600;
     } else {
       // Calculate completion rate
-      if (dayData.length === 0) return 0;
-      const completed = dayData.filter(session => session.completed).length;
-      return (completed / dayData.length) * 100;
+      const total = dayStats.targetSessions;
+      if (total === 0) return 0;
+      return (dayStats.completedSessions / total) * 100;
     }
   });
 
@@ -98,10 +98,11 @@ export default function AnalyticsCharts({ type }: ChartProps) {
   const ChartComponent = type === 'focus' ? Line : Bar;
 
   return (
-    <div className="space-y-6">
-      <Card className="p-4">
-        <ChartComponent data={chartData} options={options} />
-      </Card>
+    <div className="space-y-2">
+      <h3 className="text-lg font-semibold">
+        {type === 'focus' ? 'Focus Time' : 'Completion Rate'}
+      </h3>
+      <ChartComponent options={options} data={chartData} />
     </div>
   );
 }

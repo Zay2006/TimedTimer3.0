@@ -2,6 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { useTimerData } from '../../context/DataContext';
+import type { DailyStats } from '../../types/timer';
 import { Card } from '../ui/card';
 import { Clock, Calendar, CheckCircle2, Timer, Flame } from 'lucide-react';
 import { formatTime } from '../../lib/utils';
@@ -49,21 +50,25 @@ function StatCard({ icon: Icon, title, value, tooltip, color = 'text-primary' }:
 export default function SessionStats() {
   const { data } = useTimerData();
   
-  const { todayStats, preferredDuration } = useMemo(() => {
-    const todayKey = new Date().toISOString().split('T')[0];
-    const todayGoal = data.analytics.dailyGoals[todayKey] || {
-      completed: false,
+  const todayStats = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const stats = data.analytics.dailyStats.find((stat: DailyStats) => stat.date === today)?.metrics || {
+      completedSessions: 0,
       focusTime: 0,
-      sessions: 0
+      productivityScore: 0,
+      interrupted: false,
+      breaks: 0,
+      achievements: 0,
+      targetSessions: 4
     };
 
     return {
-      todayStats: {
-        sessions: todayGoal.sessions,
-        focusTime: todayGoal.focusTime,
-        completionRate: data.analytics.completionRate || 0
-      },
-      preferredDuration: data.analytics.bestFocusTime || 0
+      sessions: stats.completedSessions,
+      focusTime: stats.focusTime,
+      completionRate: data.analytics.completionRate || 0,
+      interrupted: stats.interrupted,
+      breaks: stats.breaks,
+      targetSessions: stats.targetSessions
     };
   }, [data.analytics]);
 
@@ -77,8 +82,8 @@ export default function SessionStats() {
         <StatCard
           icon={Timer}
           title="Sessions"
-          value={todayStats.sessions}
-          tooltip="Number of focus sessions completed today"
+          value={`${todayStats.sessions}/${todayStats.targetSessions}`}
+          tooltip="Completed sessions / Daily target"
         />
         <StatCard
           icon={Clock}
@@ -90,7 +95,7 @@ export default function SessionStats() {
           icon={CheckCircle2}
           title="Completion Rate"
           value={`${Math.round(todayStats.completionRate)}%`}
-          tooltip="Percentage of completed sessions today"
+          tooltip="Percentage of completed sessions"
           color={todayStats.completionRate >= 80 ? 'text-green-500' : 'text-primary'}
         />
         <StatCard
@@ -101,11 +106,6 @@ export default function SessionStats() {
           color={data.analytics.currentStreak >= 3 ? 'text-orange-500' : 'text-primary'}
         />
       </div>
-      {preferredDuration > 0 && (
-        <p className="text-sm text-muted-foreground mt-2">
-          Your preferred session duration: {formatTime(preferredDuration)}
-        </p>
-      )}
     </div>
   );
 }

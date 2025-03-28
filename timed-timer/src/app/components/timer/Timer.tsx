@@ -7,9 +7,10 @@ import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { formatTime } from '../../lib/utils';
 import { Progress } from '../ui/progress';
-import { Play, Pause, Square, SkipForward, BarChart } from 'lucide-react';
+import { Play, Pause, Square, SkipForward, BarChart, Timer as TimerIcon, Clock } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 import { Analytics } from '../analytics/Analytics';
+import { TimerMode } from '@/app/types/timer';
 
 /**
  * Timer component that displays the current time and state
@@ -19,13 +20,14 @@ export default function Timer() {
   const { 
     currentTime, 
     totalTime, 
-    timerState, 
-    startTimer, 
+    timerState,
+    timerMode,
+    startTimer,
+    startStopwatch,
     pauseTimer, 
     resumeTimer, 
     stopTimer, 
-    skipBreak,
-    sessionData 
+    skipBreak
   } = useTimer();
   const { settings } = useSettings();
   const [showAnalytics, setShowAnalytics] = React.useState(false);
@@ -57,13 +59,8 @@ export default function Timer() {
     stopTimer();
   };
 
-  const handleStartTimer = () => {
-    startTimer(1500); // 25 minutes in seconds
-    resumeTimer();
-  };
-
   const progress = totalTime > 0 ? ((totalTime - currentTime) / totalTime) * 100 : 0;
-  const timeDisplay = formatTime(currentTime);
+  const timeDisplay = formatTime(timerMode === TimerMode.STOPWATCH ? currentTime : Math.max(0, currentTime));
 
   const getStateMessage = () => {
     switch (timerState) {
@@ -79,121 +76,103 @@ export default function Timer() {
   };
 
   if (showAnalytics) {
-    return <Analytics onBack={() => setShowAnalytics(false)} data={sessionData} />;
+    return <Analytics onBack={() => setShowAnalytics(false)} />;
   }
 
   return (
-    <div className="relative p-8 overflow-hidden">
+    <div className="relative p-8 pt-20 overflow-hidden">
       {/* Background gradient effect */}
       <div className={cn(
-        "absolute inset-0 opacity-20 transition-colors duration-500",
-        timerState === 'running' && "bg-gradient-to-br from-primary to-primary/30",
-        timerState === 'break' && "bg-gradient-to-br from-green-500 to-green-500/30",
-        timerState === 'paused' && "bg-gradient-to-br from-yellow-500 to-yellow-500/30"
+        "absolute inset-0 opacity-30 dark:opacity-50 transition-colors duration-500",
+        timerState === 'running' && "bg-gradient-to-br from-primary to-primary/30 dark:from-primary/80",
+        timerState === 'break' && "bg-gradient-to-br from-green-500 to-green-500/30 dark:from-green-500",
+        timerState === 'paused' && "bg-gradient-to-br from-yellow-500 to-yellow-500/30 dark:from-yellow-500"
       )} />
 
       {/* Analytics button */}
       <Button
-        variant="outline"
-        className="absolute top-4 right-4"
+        variant="default"
+        size="lg"
+        className="absolute top-4 right-4 bg-primary text-primary-foreground hover:bg-primary/90 dark:bg-blue-500 dark:hover:bg-blue-600 dark:text-white shadow-lg dark:shadow-blue-500/30 transition-all hover:scale-105 font-semibold"
         onClick={() => setShowAnalytics(true)}
       >
-        <BarChart className="w-4 h-4 mr-2" />
-        Analytics
+        <BarChart className="w-5 h-5 mr-2" />
+        View Analytics
       </Button>
 
-      {/* Timer content */}
-      <div className="relative z-10">
-        <div className="flex flex-col items-center justify-center space-y-6">
-          {/* Timer display */}
-          <div className="text-center">
-            <div className="relative">
-              <div className={cn(
-                "text-8xl font-bold font-mono tracking-tight transition-colors dark:text-white",
-                timerState === 'break' && "text-green-500",
-                timerState === 'paused' && "text-yellow-500"
-              )}>
-                {timeDisplay}
-              </div>
-              <div className="absolute -bottom-6 left-0 right-0">
-                <p className={cn(
-                  "text-sm font-medium transition-colors dark:text-white",
-                  timerState === 'break' && "text-green-500",
-                  timerState === 'paused' && "text-yellow-500",
-                  "text-muted-foreground"
-                )}>
-                  {getStateMessage()}
-                </p>
-              </div>
-            </div>
+      <Card className="relative p-8 space-y-8 dark:bg-gray-900/90 dark:border-gray-600 backdrop-blur-sm shadow-xl dark:shadow-gray-900/50">
+        <div className="space-y-2 text-center">
+          <h2 className="text-2xl font-bold dark:text-white">{getStateMessage()}</h2>
+          <div className="text-6xl font-mono font-bold tracking-wider dark:text-blue-300">
+            {timeDisplay}
           </div>
+        </div>
 
-          {/* Progress bar */}
-          <div className="w-full max-w-md">
-            <Progress 
-              value={progress} 
-              className={cn(
-                "h-2 transition-all duration-500",
-                timerState === 'break' && "bg-green-500/20 [&>div]:bg-green-500",
-                timerState === 'paused' && "bg-yellow-500/20 [&>div]:bg-yellow-500"
-              )}
-              aria-label={`Timer progress: ${Math.round(progress)}%`}
-            />
-          </div>
+        {timerMode === TimerMode.COUNTDOWN && totalTime > 0 && (
+          <Progress 
+            value={progress} 
+            className="h-2 dark:bg-gray-800 dark:[&>div]:bg-blue-500"
+          />
+        )}
 
-          {/* Controls */}
-          <div className="flex justify-center gap-4 mt-8">
-            {timerState === 'idle' && (
-              <Button
-                onClick={handleStartTimer}
-                className={cn(
-                  "h-12 w-12 rounded-full transition-all hover:scale-105",
-                  "bg-primary text-primary-foreground hover:bg-primary/90"
-                )}
+        <div className="flex justify-center gap-4">
+          {timerState === 'idle' ? (
+            <>
+              <Button 
+                onClick={() => startTimer(1500)} 
+                className="gap-2 dark:bg-blue-500 dark:hover:bg-blue-600 dark:text-white font-semibold shadow-lg dark:shadow-blue-500/30"
+              >
+                <TimerIcon className="w-4 h-4" />
+                Timer
+              </Button>
+              <Button 
+                onClick={() => startStopwatch()} 
+                className="gap-2 dark:bg-blue-500 dark:hover:bg-blue-600 dark:text-white font-semibold shadow-lg dark:shadow-blue-500/30"
+              >
+                <Clock className="w-4 h-4" />
+                Stopwatch
+              </Button>
+            </>
+          ) : timerState === 'running' ? (
+            <Button 
+              onClick={pauseTimer} 
+              variant="outline" 
+              size="icon"
+              className="dark:border-blue-400 dark:hover:bg-blue-500/20 dark:text-blue-300 dark:hover:text-blue-200"
+            >
+              <Pause className="w-6 h-6" />
+            </Button>
+          ) : timerState === 'paused' ? (
+            <>
+              <Button 
+                onClick={resumeTimer} 
+                variant="outline" 
+                size="icon"
+                className="dark:border-blue-400 dark:hover:bg-blue-500/20 dark:text-blue-300 dark:hover:text-blue-200"
               >
                 <Play className="w-6 h-6" />
               </Button>
-            )}
-
-            {timerState === 'running' && (
-              <Button
-                onClick={pauseTimer}
-                className="h-12 w-12 rounded-full transition-all hover:scale-105"
-              >
-                <Pause className="w-6 h-6" />
-              </Button>
-            )}
-
-            {timerState === 'paused' && (
-              <Button
-                onClick={resumeTimer}
-                className="h-12 w-12 rounded-full transition-all hover:scale-105 bg-yellow-500 hover:bg-yellow-600"
-              >
-                <Play className="w-6 h-6" />
-              </Button>
-            )}
-
-            {timerState !== 'idle' && (
-              <Button
-                onClick={handleStop}
-                variant="destructive"
-                className="h-12 w-12 rounded-full transition-all hover:scale-105"
+              <Button 
+                onClick={handleStop} 
+                variant="outline" 
+                size="icon"
+                className="dark:border-blue-400 dark:hover:bg-blue-500/20 dark:text-blue-300 dark:hover:text-blue-200"
               >
                 <Square className="w-6 h-6" />
               </Button>
-            )}
-
-            {timerState === 'break' && (
-              <Button
-                onClick={skipBreak}
-                className="h-12 w-12 rounded-full transition-all hover:scale-105 bg-green-500 hover:bg-green-600"
-              >
-                <SkipForward className="w-6 h-6" />
-              </Button>
-            )}
-          </div>
+            </>
+          ) : timerState === 'break' ? (
+            <Button 
+              onClick={skipBreak} 
+              variant="outline" 
+              className="gap-2 dark:border-green-400 dark:hover:bg-green-500/20 dark:text-green-300 dark:hover:text-green-200"
+            >
+              <SkipForward className="w-4 h-4" />
+              Skip Break
+            </Button>
+          ) : null}
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

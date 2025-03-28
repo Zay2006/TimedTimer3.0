@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
@@ -11,6 +13,12 @@ import {
   Legend,
 } from 'chart.js';
 import { Button } from '../ui/button';
+import { useTimerData } from '../../context/DataContext';
+import { Card } from '../ui/card';
+import SessionStats from './SessionStats';
+import AnalyticsCharts from './AnalyticsCharts';
+import StreakCounter from './StreakCounter';
+import AchievementsDialog from '../achievements/AchievementsDialog';
 
 ChartJS.register(
   CategoryScale,
@@ -24,64 +32,36 @@ ChartJS.register(
 
 interface AnalyticsProps {
   onBack: () => void;
-  data: {
-    sessions: Array<{
-      startTime: string;
-      endTime?: string;
-      focusTime: number;
-    }>;
-  };
 }
 
-export function Analytics({ onBack, data }: AnalyticsProps) {
-  const chartData = {
-    labels: data.sessions.map(session => new Date(session.startTime).toLocaleDateString()),
-    datasets: [
-      {
-        label: 'Focus Time (minutes)',
-        data: data.sessions.map(session => session.focusTime / 60),
-        borderColor: 'rgb(75, 192, 192)',
-        tension: 0.1,
-      },
-    ],
-  };
-
-  const options = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top' as const,
-      },
-      title: {
-        display: true,
-        text: 'Focus Time Trend',
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: 'Minutes',
-        },
-      },
-    },
-  };
+export function Analytics({ onBack }: AnalyticsProps) {
+  const { data } = useTimerData();
 
   return (
     <div className="p-6">
-      <div className="flex items-center mb-6">
-        <Button
-          variant="outline"
-          className="mr-4"
-          onClick={onBack}
-        >
-          ← Back
-        </Button>
-        <h2 className="text-2xl font-bold">Analytics</h2>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            onClick={onBack}
+          >
+            ← Back
+          </Button>
+          <h2 className="text-2xl font-bold">Analytics</h2>
+        </div>
+        <AchievementsDialog />
       </div>
-      <div className="bg-card p-6 rounded-lg">
-        <Line options={options} data={chartData} />
+      <div className="space-y-6">
+        <SessionStats />
+        <StreakCounter />
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card className="p-4">
+            <AnalyticsCharts type="focus" />
+          </Card>
+          <Card className="p-4">
+            <AnalyticsCharts type="completion" />
+          </Card>
+        </div>
       </div>
     </div>
   );

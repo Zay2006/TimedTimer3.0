@@ -19,16 +19,17 @@ import { Achievement, AchievementProgress, AchievementStats, achievementTypes } 
  * @type {Analytics}
  */
 const defaultAnalytics: Analytics = {
-  totalSessions: 0,
   totalFocusTime: 0,
+  totalSessions: 0,
   completedSessions: 0,
+  averageSessionLength: 0,
   completionRate: 0,
-  longestStreak: 0,
-  currentStreak: 0,
-  bestFocusTime: 0,
-  averageFocusTime: 0,
-  dailyGoals: {},
   productivityScore: 0,
+  currentStreak: 0,
+  longestStreak: 0,
+  dailyStats: [],
+  weeklyStats: [],
+  monthlyStats: []
 };
 
 /**
@@ -56,7 +57,21 @@ const defaultAchievementStats: AchievementStats = {
  */
 const defaultData: TimerData = {
   sessions: [],
-  analytics: defaultAnalytics,
+  analytics: {
+    ...defaultAnalytics,
+    dailyStats: [{
+      date: new Date().toISOString().split('T')[0],
+      metrics: {
+        completedSessions: 0,
+        focusTime: 0,
+        interrupted: false,
+        breaks: 0,
+        achievements: 0,
+        productivityScore: 0,
+        targetSessions: 4
+      }
+    }]
+  },
   achievements: [],
   achievementProgress: {},
   achievementStats: defaultAchievementStats,
@@ -128,21 +143,47 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * Initialize data from localStorage
-   * 
-   * Loads saved data from localStorage and updates the state.
-   * If data is corrupted or missing, defaults to initial state.
    */
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedData = localStorage.getItem('timerData');
+      let initialData = defaultData;
+      
       if (savedData) {
         try {
           const parsedData = JSON.parse(savedData);
-          setData(parsedData);
+          // Ensure analytics has the correct structure
+          initialData = {
+            ...parsedData,
+            analytics: {
+              ...defaultAnalytics,
+              ...parsedData.analytics,
+              dailyStats: parsedData.analytics?.dailyStats || defaultData.analytics.dailyStats
+            }
+          };
         } catch (error) {
           console.error('Error parsing saved data:', error);
         }
       }
+
+      // Ensure today's stats exist
+      const today = new Date().toISOString().split('T')[0];
+      if (!initialData.analytics.dailyStats.find(stat => stat.date === today)) {
+        initialData.analytics.dailyStats.push({
+          date: today,
+          metrics: {
+            completedSessions: 0,
+            focusTime: 0,
+            interrupted: false,
+            breaks: 0,
+            achievements: 0,
+            productivityScore: 0,
+            targetSessions: 4
+          }
+        });
+      }
+
+      setData(initialData);
       setIsInitialized(true);
     }
   }, []);
@@ -170,11 +211,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * Check and update achievement progress
-   * Automatically checks all achievement types and unlocks new achievements
    */
   const checkAchievements = () => {
     const newProgress = { ...data.achievementProgress };
     let achievementsChanged = false;
+
+    // Get today's stats
+    const today = new Date().toISOString().split('T')[0];
+    const todayStats = data.analytics.dailyStats.find(stat => stat.date === today)?.metrics;
+    if (!todayStats) return;
 
     // Check each achievement type
     Object.entries(achievementTypes).forEach(([typeId, type]) => {
@@ -193,7 +238,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           value = data.analytics.completedSessions;
           break;
         case 'productivityPro':
-          value = data.analytics.productivityScore;
+          value = todayStats.productivityScore;
           break;
       }
 
@@ -207,6 +252,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           if (value >= tier.requirement && tier.level > progress.currentTier) {
             unlockAchievement(typeId, tier.level);
             progress.currentTier = tier.level;
+            todayStats.achievements++;
           }
         });
       }
@@ -263,9 +309,43 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
    * Updates the timer data state
    * Triggers analytics recalculation and persistence
    * 
-   * @param {TimerData} data - New timer data to update
+   * @param {TimerData} newData - New timer data to update
    */
   const updateData = (newData: TimerData) => {
+    // Ensure today's stats exist
+    const today = new Date().toISOString().split('T')[0];
+    if (!newData.analytics.dailyStats.find(stat => stat.date === today)) {
+      newData.analytics.dailyStats.push({
+        date: today,
+        metrics: {
+          completedSessions: 0,
+          focusTime: 0,
+          interrupted: false,
+          breaks: 0,
+          achievements: 0,
+          productivityScore: 0,
+          targetSessions: 4
+        }
+      });
+    }
+
+    // Update analytics
+    const todayStats = newData.analytics.dailyStats.find(stat => stat.date === today)!;
+    todayStats.metrics.completedSessions = newData.sessions.filter(s => 
+      s.completed && new Date(s.startTime).toISOString().split('T')[0] === today
+    ).length;
+    todayStats.metrics.focusTime = newData.sessions.filter(s => 
+      new Date(s.startTime).toISOString().split('T')[0] === today
+    ).reduce((acc, s) => acc + s.focusTime, 0);
+    todayStats.metrics.breaks = newData.sessions.filter(s => 
+      new Date(s.startTime).toISOString().split('T')[0] === today
+    ).reduce((acc, s) => acc + s.breaks, 0);
+
+    // Update completion rate
+    if (todayStats.metrics.targetSessions > 0) {
+      newData.analytics.completionRate = (todayStats.metrics.completedSessions / todayStats.metrics.targetSessions) * 100;
+    }
+
     setData(newData);
   };
 

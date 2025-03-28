@@ -22,7 +22,7 @@ const achievements: Achievement[] = [
     description: 'Complete your first focus session',
     icon: Star,
     color: 'text-yellow-500',
-    condition: (data) => data.sessions.some(s => s.completed),
+    condition: (data) => data.analytics.completedSessions > 0,
   },
   {
     id: 'three_day_streak',
@@ -46,7 +46,7 @@ const achievements: Achievement[] = [
     description: 'Complete 30 focus sessions',
     icon: Target,
     color: 'text-blue-500',
-    condition: (data) => data.sessions.filter(s => s.completed).length >= 30,
+    condition: (data) => data.analytics.completedSessions >= 30,
   },
   {
     id: 'ten_hours',
@@ -64,13 +64,13 @@ export default function Achievements() {
   const calculateProgress = (achievement: Achievement) => {
     switch (achievement.id) {
       case 'first_session':
-        return data.sessions.some(s => s.completed) ? 100 : 0;
+        return data.analytics.completedSessions > 0 ? 100 : 0;
       case 'three_day_streak':
         return Math.min((data.analytics.currentStreak / 3) * 100, 100);
       case 'seven_day_streak':
         return Math.min((data.analytics.currentStreak / 7) * 100, 100);
       case 'thirty_sessions':
-        return Math.min((data.sessions.filter(s => s.completed).length / 30) * 100, 100);
+        return Math.min((data.analytics.completedSessions / 30) * 100, 100);
       case 'ten_hours':
         return Math.min((data.analytics.totalFocusTime / 36000) * 100, 100);
       default:
@@ -100,7 +100,7 @@ export default function Achievements() {
                         <h3 className="font-semibold">{achievement.title}</h3>
                         <div className="h-1.5 w-full bg-secondary mt-2 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-primary transition-all duration-500 ease-out"
+                            className="h-full bg-primary transition-all duration-500"
                             style={{ width: `${progress}%` }}
                           />
                         </div>
@@ -109,8 +109,8 @@ export default function Achievements() {
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>{achievement.description}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {isUnlocked ? 'Achievement unlocked!' : `Progress: ${Math.round(progress)}%`}
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {isUnlocked ? 'Unlocked!' : `${Math.round(progress)}% complete`}
                     </p>
                   </TooltipContent>
                 </Tooltip>

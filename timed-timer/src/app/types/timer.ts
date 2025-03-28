@@ -19,10 +19,32 @@ export interface TimerPreset {
   color?: string;  // optional theme color
 }
 
+/**
+ * Timer state enum
+ */
+export enum TimerState {
+  IDLE = 'idle',
+  RUNNING = 'running',
+  PAUSED = 'paused',
+  BREAK = 'break'
+}
+
+/**
+ * Timer mode enum
+ */
+export enum TimerMode {
+  COUNTDOWN = 'countdown',
+  STOPWATCH = 'stopwatch'
+}
+
+/**
+ * Timer state type
+ */
 export interface TimerStateType {
   currentTime: number;  // in seconds
   totalTime: number;  // in seconds
-  timerState: 'idle' | 'running' | 'paused' | 'break';
+  timerState: TimerState;
+  timerMode: TimerMode;
   activePresetId: string | null;
   completedSessions: number;
   totalFocusTime: number;  // in seconds
@@ -77,11 +99,15 @@ export interface TimerSettings {
   showTimeInTitle: boolean;
 }
 
+/**
+ * Timer context type
+ */
 export interface TimerContextType {
   currentSession: Session | null;
   totalFocusTime: number;
   completedSessions: number;
   startTimer: (duration: number) => void;
+  startStopwatch: () => void;
   pauseTimer: () => void;
   resumeTimer: () => void;
   stopTimer: () => void;
@@ -91,6 +117,11 @@ export interface TimerContextType {
   isPaused: boolean;
   timeLeft: number;
   progress: number;
+  currentTime: number;
+  totalTime: number;
+  timerState: TimerState;
+  timerMode: TimerMode;
+  skipBreak: () => void;
 }
 
 export interface ProductivityMetrics {
@@ -126,9 +157,12 @@ export interface Analytics {
   monthlyStats: MonthlyStats[];
   totalFocusTime: number;
   totalSessions: number;
+  completedSessions: number;
   averageSessionLength: number;
   completionRate: number;
   productivityScore: number;
+  currentStreak: number;
+  longestStreak: number;
 }
 
 export interface TimerData {
