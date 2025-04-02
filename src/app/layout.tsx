@@ -9,7 +9,10 @@ import { AchievementProvider } from './context/AchievementContext';
 import { ThemeProvider } from './components/ThemeProvider';
 import ToastManager from './components/feedback/ToastManager';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+});
 
 export default function RootLayout({
   children,

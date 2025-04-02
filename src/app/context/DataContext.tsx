@@ -152,23 +152,30 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       if (savedData) {
         try {
           const parsedData = JSON.parse(savedData);
-          // Ensure analytics has the correct structure
+          // Ensure analytics has the correct structure with default values
           initialData = {
-            ...parsedData,
+            ...defaultData, // Start with all default values
+            ...parsedData,  // Override with saved data
             analytics: {
-              ...defaultAnalytics,
-              ...parsedData.analytics,
-              dailyStats: parsedData.analytics?.dailyStats || defaultData.analytics.dailyStats
+              ...defaultAnalytics, // Ensure all analytics fields exist
+              ...parsedData.analytics, // Override with saved analytics
+              dailyStats: Array.isArray(parsedData.analytics?.dailyStats) 
+                ? parsedData.analytics.dailyStats 
+                : defaultData.analytics.dailyStats
             }
           };
         } catch (error) {
           console.error('Error parsing saved data:', error);
+          // On error, use default data
+          initialData = defaultData;
         }
       }
 
-      // Ensure today's stats exist
+      // Ensure today's stats exist and have all required fields
       const today = new Date().toISOString().split('T')[0];
-      if (!initialData.analytics.dailyStats.find(stat => stat.date === today)) {
+      const todayStats = initialData.analytics.dailyStats.find(stat => stat.date === today);
+      
+      if (!todayStats) {
         initialData.analytics.dailyStats.push({
           date: today,
           metrics: {
@@ -181,6 +188,20 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             targetSessions: 4
           }
         });
+      } else {
+        // Ensure today's stats have all required fields
+        todayStats.metrics = {
+          ...{
+            completedSessions: 0,
+            focusTime: 0,
+            interrupted: false,
+            breaks: 0,
+            achievements: 0,
+            productivityScore: 0,
+            targetSessions: 4
+          },
+          ...todayStats.metrics
+        };
       }
 
       setData(initialData);
@@ -312,9 +333,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
    * @param {TimerData} newData - New timer data to update
    */
   const updateData = (newData: TimerData) => {
-    // Ensure today's stats exist
+    // Ensure today's stats exist and have all required fields
     const today = new Date().toISOString().split('T')[0];
-    if (!newData.analytics.dailyStats.find(stat => stat.date === today)) {
+    const todayStats = newData.analytics.dailyStats.find(stat => stat.date === today);
+    
+    if (!todayStats) {
       newData.analytics.dailyStats.push({
         date: today,
         metrics: {
@@ -327,23 +350,37 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           targetSessions: 4
         }
       });
+    } else {
+      // Ensure today's stats have all required fields
+      todayStats.metrics = {
+        ...{
+          completedSessions: 0,
+          focusTime: 0,
+          interrupted: false,
+          breaks: 0,
+          achievements: 0,
+          productivityScore: 0,
+          targetSessions: 4
+        },
+        ...todayStats.metrics
+      };
     }
 
     // Update analytics
-    const todayStats = newData.analytics.dailyStats.find(stat => stat.date === today)!;
-    todayStats.metrics.completedSessions = newData.sessions.filter(s => 
+    const todayStatsUpdated = newData.analytics.dailyStats.find(stat => stat.date === today)!;
+    todayStatsUpdated.metrics.completedSessions = newData.sessions.filter(s => 
       s.completed && new Date(s.startTime).toISOString().split('T')[0] === today
     ).length;
-    todayStats.metrics.focusTime = newData.sessions.filter(s => 
+    todayStatsUpdated.metrics.focusTime = newData.sessions.filter(s => 
       new Date(s.startTime).toISOString().split('T')[0] === today
     ).reduce((acc, s) => acc + s.focusTime, 0);
-    todayStats.metrics.breaks = newData.sessions.filter(s => 
+    todayStatsUpdated.metrics.breaks = newData.sessions.filter(s => 
       new Date(s.startTime).toISOString().split('T')[0] === today
     ).reduce((acc, s) => acc + s.breaks, 0);
 
     // Update completion rate
-    if (todayStats.metrics.targetSessions > 0) {
-      newData.analytics.completionRate = (todayStats.metrics.completedSessions / todayStats.metrics.targetSessions) * 100;
+    if (todayStatsUpdated.metrics.targetSessions > 0) {
+      newData.analytics.completionRate = (todayStatsUpdated.metrics.completedSessions / todayStatsUpdated.metrics.targetSessions) * 100;
     }
 
     setData(newData);

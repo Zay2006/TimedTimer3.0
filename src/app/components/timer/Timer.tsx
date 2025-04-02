@@ -35,7 +35,7 @@ export default function Timer() {
 
   useEffect(() => {
     // Initialize audio
-    audioRef.current = new Audio('/Red Light.mp3');
+    audioRef.current = new Audio('/Fall.mp3');
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();

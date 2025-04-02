@@ -108,9 +108,9 @@ export function AchievementProvider({ children }: { children: React.ReactNode })
       });
     }
 
-    // Play sound if enabled
+    // Play achievement sound if enabled
     if (settings.soundEnabled) {
-      const audio = new Audio('/sounds/achievement.mp3');
+      const audio = new Audio('/Good Job.mp3');
       audio.volume = settings.volume;
       audio.play();
     }

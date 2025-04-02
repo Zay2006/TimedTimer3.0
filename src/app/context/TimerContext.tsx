@@ -98,31 +98,54 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
       // Update analytics
       const today = new Date().toISOString().split('T')[0];
-      const todayStats = data.analytics.dailyStats.find(stat => stat.date === today);
+      
+      // Create a safe copy of the data
+      const updatedData = {
+        ...data,
+        analytics: {
+          ...data.analytics,
+          dailyStats: Array.isArray(data.analytics?.dailyStats) 
+            ? [...data.analytics.dailyStats]
+            : [{
+                date: today,
+                metrics: {
+                  completedSessions: 0,
+                  focusTime: 0,
+                  interrupted: false,
+                  breaks: 0,
+                  achievements: 0,
+                  productivityScore: 0,
+                  targetSessions: 4
+                }
+              }]
+        }
+      };
+
+      const todayStats = updatedData.analytics.dailyStats.find(stat => stat.date === today);
+
       if (todayStats) {
-        const updatedStats = {
-          ...todayStats,
-          metrics: {
-            ...todayStats.metrics,
-            completedSessions: todayStats.metrics.completedSessions + 1,
-            focusTime: todayStats.metrics.focusTime + currentSession.duration
-          }
+        todayStats.metrics = {
+          ...todayStats.metrics,
+          completedSessions: (todayStats.metrics.completedSessions || 0) + 1,
+          focusTime: (todayStats.metrics.focusTime || 0) + currentSession.duration
         };
-
-        const updatedDailyStats = data.analytics.dailyStats.map(stat =>
-          stat.date === today ? updatedStats : stat
-        );
-
-        updateData({
-          ...data,
-          analytics: {
-            ...data.analytics,
-            totalFocusTime: data.analytics.totalFocusTime + currentSession.duration,
-            completedSessions: data.analytics.completedSessions + 1,
-            dailyStats: updatedDailyStats
+      } else {
+        updatedData.analytics.dailyStats.push({
+          date: today,
+          metrics: {
+            completedSessions: 1,
+            focusTime: currentSession.duration,
+            interrupted: false,
+            breaks: 0,
+            achievements: 0,
+            productivityScore: 0,
+            targetSessions: 4
           }
         });
       }
+
+      // Update the data context
+      updateData(updatedData);
     }
 
     setIsRunning(false);
@@ -135,7 +158,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
     // Play sound if enabled
     if (settings.soundEnabled) {
-      const audio = new Audio('/sounds/complete.mp3');
+      const audio = new Audio('/Red Light.mp3');
       audio.volume = settings.volume;
       audio.play();
     }
