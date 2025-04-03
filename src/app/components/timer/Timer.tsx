@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTimer } from '../../context/TimerContext';
 import { useSettings } from '../../context/SettingsContext';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { formatTime } from '../../lib/utils';
 import { Progress } from '../ui/progress';
-import { Play, Pause, Square, SkipForward, BarChart, Timer as TimerIcon, Clock } from 'lucide-react';
+import { Play, Pause, Square, SkipForward, BarChart, Timer as TimerIcon, Clock, Maximize2, Minimize2 } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 import { Analytics } from '../analytics/Analytics';
 import { TimerMode } from '@/app/types/timer';
@@ -31,7 +31,9 @@ export default function Timer() {
   } = useTimer();
   const { settings } = useSettings();
   const [showAnalytics, setShowAnalytics] = React.useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Initialize audio
@@ -59,6 +61,27 @@ export default function Timer() {
     stopTimer();
   };
 
+  const toggleFullScreen = async () => {
+    if (!document.fullscreenElement) {
+      await containerRef.current?.requestFullscreen();
+      setIsFullScreen(true);
+    } else {
+      await document.exitFullscreen();
+      setIsFullScreen(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleFullScreenChange = () => {
+      setIsFullScreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullScreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullScreenChange);
+    };
+  }, []);
+
   const progress = totalTime > 0 ? ((totalTime - currentTime) / totalTime) * 100 : 0;
   const timeDisplay = formatTime(timerMode === TimerMode.STOPWATCH ? currentTime : Math.max(0, currentTime));
 
@@ -80,7 +103,13 @@ export default function Timer() {
   }
 
   return (
-    <div className="relative p-8 pt-20 overflow-hidden">
+    <div 
+      ref={containerRef}
+      className={cn(
+        "relative p-8 pt-20 overflow-hidden",
+        isFullScreen && "h-screen flex items-center justify-center bg-background"
+      )}
+    >
       {/* Background gradient effect */}
       <div className={cn(
         "absolute inset-0 opacity-30 dark:opacity-50 transition-colors duration-500",
@@ -89,18 +118,35 @@ export default function Timer() {
         timerState === 'paused' && "bg-gradient-to-br from-yellow-500 to-yellow-500/30 dark:from-yellow-500"
       )} />
 
-      {/* Analytics button */}
-      <Button
-        variant="default"
-        size="lg"
-        className="absolute top-4 right-4 bg-primary text-primary-foreground hover:bg-primary/90 dark:bg-blue-500 dark:hover:bg-blue-600 dark:text-white shadow-lg dark:shadow-blue-500/30 transition-all hover:scale-105 font-semibold"
-        onClick={() => setShowAnalytics(true)}
-      >
-        <BarChart className="w-5 h-5 mr-2" />
-        View Analytics
-      </Button>
+      {/* Top Bar */}
+      <div className="absolute top-4 left-4 right-4 flex justify-between items-center">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleFullScreen}
+        >
+          {isFullScreen ? (
+            <Minimize2 className="w-5 h-5" />
+          ) : (
+            <Maximize2 className="w-5 h-5" />
+          )}
+        </Button>
 
-      <Card className="relative p-8 space-y-8 dark:bg-gray-900/90 dark:border-gray-600 backdrop-blur-sm shadow-xl dark:shadow-gray-900/50">
+        <Button
+          variant="default"
+          size="lg"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 dark:bg-blue-500 dark:hover:bg-blue-600 dark:text-white shadow-lg dark:shadow-blue-500/30 transition-all hover:scale-105 font-semibold"
+          onClick={() => setShowAnalytics(true)}
+        >
+          <BarChart className="w-5 h-5 mr-2" />
+          View Analytics
+        </Button>
+      </div>
+
+      <Card className={cn(
+        "relative p-8 space-y-8 dark:bg-gray-900/90 dark:border-gray-600 backdrop-blur-sm shadow-xl dark:shadow-gray-900/50",
+        isFullScreen && "transform scale-150"
+      )}>
         <div className="space-y-2 text-center">
           <h2 className="text-2xl font-bold dark:text-white">{getStateMessage()}</h2>
           <div className="text-6xl font-mono font-bold tracking-wider dark:text-blue-300">
