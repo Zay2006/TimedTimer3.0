@@ -1,7 +1,41 @@
 # TimedTimer 3.0
 
 ## Project Overview
-TimedTimer is a modern focus timer application built with Next.js that helps users maintain concentration and track productivity through customizable timer sessions.
+TimedTimer is a modern focus timer application built with Next.js 14 that helps users maintain concentration and track productivity through customizable timer sessions. It features comprehensive analytics, achievement tracking, and integrations with popular services.
+
+## Features
+
+- **Smart Timer Management**
+  - Customizable focus sessions
+  - Break timer integration
+  - Session pause/resume functionality
+  - Progress tracking
+
+- **Analytics & Insights**
+  - Detailed productivity metrics
+  - Focus patterns analysis
+  - Daily, weekly, and monthly statistics
+  - Performance scoring
+
+- **Achievement System**
+  - Progress-based achievements
+  - Streak tracking
+  - Performance milestones
+  - Daily goals
+
+- **Modern UI/UX**
+  - Clean, minimal interface
+  - Dark/light mode support
+  - Responsive design
+  - Floating timer widget
+
+## Tech Stack
+
+- Next.js 14
+- TypeScript
+- Tailwind CSS
+- shadcn/ui components
+- Lucide icons
 
 ## Quick Start
 
@@ -12,15 +46,65 @@ TimedTimer is a modern focus timer application built with Next.js that helps use
 
 ### Installation
 
-1. **Clone and Install**
+1. **Clone the Repository**
    ```bash
    git clone https://github.com/Zay2006/TimedTimer3.0.git
    cd TimedTimer3.0
+   ```
+
+2. **Install Dependencies**
+   ```bash
    npm install
    ```
 
-2. **Environment Setup**
-   Create a `.env.local` file in the root directory with:
+3. **Run Development Server**
+   ```bash
+   npm run dev
+   ```
+   The application will be available at `http://localhost:3000`
+
+4. **Build for Production**
+   ```bash
+   npm run build
+   ```
+
+## Project Structure
+
+```
+src/
+├── app/              # Next.js app directory
+│   ├── components/   # React components
+│   ├── context/      # React context providers
+│   ├── hooks/        # Custom React hooks
+│   └── types/        # TypeScript type definitions
+├── public/           # Static assets
+└── styles/          # Global styles
+```
+
+## Key Features Implementation
+
+### Timer System
+- Accurate session tracking with breaks
+- Focus time calculation excluding breaks
+- Session persistence
+- Progress tracking
+
+### Analytics
+- Real-time productivity metrics
+- Focus pattern detection
+- Achievement progress tracking
+- Performance scoring system
+
+### Data Management
+- Local storage persistence
+- Type-safe operations
+- Automatic state updates
+- Session history tracking
+
+## Environment Setup
+
+1. **Create Environment File**
+   Create a `.env.local` file in the root directory:
    ```env
    NEXT_PUBLIC_APP_URL=http://localhost:3000
    
@@ -29,19 +113,9 @@ TimedTimer is a modern focus timer application built with Next.js that helps use
    SPOTIFY_CLIENT_SECRET=your_client_secret
    ```
 
-3. **Development Server**
-   ```bash
-   npm run dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000)
+## Troubleshooting
 
-4. **Production Build**
-   ```bash
-   npm run build
-   npm start
-   ```
-
-### Troubleshooting
+### Common Issues
 - **Port Conflicts**: Use `npm run dev -- -p 3001` for a different port
 - **Dependencies Issues**: 
   ```bash
@@ -50,33 +124,11 @@ TimedTimer is a modern focus timer application built with Next.js that helps use
   npm install
   ```
 
-## Features
-- **Advanced Timer System**
-  - Multiple timer presets (Pomodoro, Custom, Short Focus)
-  - Break timer functionality
-  - Session planning and tracking
-  - Real-time progress visualization
-
-- **Analytics & Tracking**
-  - Comprehensive session statistics
-  - Daily progress tracking
-  - Streak system with achievements
-  - Focus time analytics
-  - Session completion rates
-
-- **Settings & Customization**
-  - Theme customization (Light/Dark mode)
-  - Sound notifications
-  - Timer presets management
-  - System notifications
-  - Spotify integration for focus music
-
-- **Data Management**
-  - Local storage persistence
-  - Session history tracking
-  - Analytics data management
-  - Achievement system
-
+### Development Tips
+- Use the development server with `npm run dev` for hot reloading
+- Check the browser console for any errors
+- Verify environment variables are properly set
+- Make sure all dependencies are installed correctly
 ## Tech Stack
 - **Framework**: Next.js 14+ with React 18
 - **UI Components**: shadcn/ui
