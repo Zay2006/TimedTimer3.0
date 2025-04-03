@@ -10,7 +10,6 @@ import {
   Crown,
   Coffee,
   TrendingUp,
-  Icon,
   Star,
   LucideIcon
 } from 'lucide-react';

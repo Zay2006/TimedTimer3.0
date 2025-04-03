@@ -20,6 +20,7 @@ import { TimerContextType, Session, TimerState, TimerMode } from '../types/timer
 const defaultContext: TimerContextType = {
   currentSession: null,
   totalFocusTime: 0,
+  totalBreakTime: 0,
   completedSessions: 0,
   startTimer: () => {},
   startStopwatch: () => {},
@@ -55,6 +56,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const [isPaused, setIsPaused] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
   const [totalFocusTime, setTotalFocusTime] = useState(0);
+  const [totalBreakTime, setTotalBreakTime] = useState(0);
   const [completedSessions, setCompletedSessions] = useState(0);
   const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
   const [timerState, setTimerState] = useState<TimerState>(TimerState.IDLE);
@@ -68,6 +70,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     if (savedData) {
       const data = JSON.parse(savedData);
       setTotalFocusTime(data.totalFocusTime || 0);
+      setTotalBreakTime(data.totalBreakTime || 0);
       setCompletedSessions(data.completedSessions || 0);
     }
   }, []);
@@ -76,9 +79,10 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     localStorage.setItem('timerData', JSON.stringify({
       totalFocusTime,
+      totalBreakTime,
       completedSessions
     }));
-  }, [totalFocusTime, completedSessions]);
+  }, [totalFocusTime, totalBreakTime, completedSessions]);
 
   /**
    * Completes the current timer session
@@ -384,6 +388,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     <TimerContext.Provider value={{
       currentSession,
       totalFocusTime,
+      totalBreakTime,
       completedSessions,
       startTimer,
       startStopwatch,

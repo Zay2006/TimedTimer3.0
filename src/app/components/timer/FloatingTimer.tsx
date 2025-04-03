@@ -86,14 +86,14 @@ const FloatingTimer = () => {
       </div>
 
       <div className="timer-display">
-        {formatTime(timer.time)}
+        {formatTime(timer.timeLeft)}
       </div>
 
       <div className="timer-controls">
         <Button
           variant="outline"
           size="sm"
-          onClick={timer.toggleTimer}
+          onClick={() => timer.isRunning ? timer.pauseTimer() : timer.startTimer(timer.totalTime)}
         >
           {timer.isRunning ? 'Pause' : 'Start'}
         </Button>

@@ -30,7 +30,7 @@ export default function PresetSelector() {
           <Button
             key={preset.id}
             variant="outline"
-            onClick={() => startTimer(preset.duration, preset.id)}
+            onClick={() => startTimer(preset.duration)}
             className={cn(
               "h-auto py-4 px-4 flex flex-col items-start gap-2",
               "hover:scale-105 transition-all duration-200",

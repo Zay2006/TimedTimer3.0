@@ -105,6 +105,7 @@ export interface TimerSettings {
 export interface TimerContextType {
   currentSession: Session | null;
   totalFocusTime: number;
+  totalBreakTime: number;
   completedSessions: number;
   startTimer: (duration: number) => void;
   startStopwatch: () => void;

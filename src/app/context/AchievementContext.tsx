@@ -10,6 +10,7 @@ import {
   AchievementStats,
   achievementTypes 
 } from '../types/achievements';
+import { ProductivityMetrics, DailyStat } from '../types/analytics';
 
 interface AchievementContextType {
   achievements: Achievement[];
@@ -192,7 +193,9 @@ export function AchievementProvider({ children }: { children: React.ReactNode })
     // Check Perfect Timer achievement
     if (currentSession?.completed && !currentSession.interrupted) {
       const perfectSessions = analyticsData.dailyStats
-        .filter(stat => stat.metrics.completedSessions > 0 && !stat.metrics.interrupted)
+        .filter((stat): stat is DailyStat => 
+          stat.metrics.completedSessions > 0 && stat.metrics.incompleteSessions === 0
+        )
         .length;
 
       achievementTypes.perfectTimer.tiers.forEach(tier => {
@@ -211,7 +214,7 @@ export function AchievementProvider({ children }: { children: React.ReactNode })
       focusTimeTotal: totalFocusTime,
       sessionsCompleted: completedSessions,
       dailyGoalsReached: Object.values(analyticsData.dailyStats).filter(
-        stat => stat.metrics.completedSessions >= stat.metrics.targetSessions
+        stat => stat.metrics.completedSessions > 0 && stat.metrics.incompleteSessions === 0
       ).length
     }));
   }, [totalFocusTime, completedSessions, analyticsData, progress, unlockAchievement, currentSession]);

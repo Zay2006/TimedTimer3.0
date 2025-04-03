@@ -34,7 +34,8 @@ export function useTimer({ initialTime = 25 * 60, onComplete }: UseTimerOptions 
       duration,
       completed,
       breaks: 0,
-      focusTime: completed ? duration : Math.floor((Date.now() - (startTimeRef.current || Date.now())) / 1000)
+      focusTime: completed ? duration : Math.floor((Date.now() - (startTimeRef.current || Date.now())) / 1000),
+      interrupted: !completed
     };
 
     updateData({
