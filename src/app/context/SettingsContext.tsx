@@ -49,13 +49,12 @@ const defaultPresets: TimerPreset[] = [
  */
 const defaultSettings: TimerSettings = {
   soundEnabled: true,
+  theme: 'light', // 'system', 'light', 'dark', 'purple', 'blue'
   volume: 0.5, // Changed from 50 to 0.5 (50%) for HTMLMediaElement compatibility
   notificationsEnabled: true,
-  theme: 'system',
   presets: defaultPresets,
-  spotifyEnabled: false,
-  spotifyToken: null,
   youtubeEnabled: false,
+  youtubeUrl: '',
   analyticsConfig: {
     metrics: {
       focusScore: {

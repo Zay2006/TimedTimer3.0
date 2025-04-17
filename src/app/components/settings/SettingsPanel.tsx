@@ -3,13 +3,14 @@
 import React, { useState } from "react";
 import { useSettings } from "../../context/SettingsContext";
 import { useTimerData } from "../../context/DataContext";
-import { Plus, Trash2, Download, Upload, Volume2, Bell, Keyboard } from "lucide-react";
+import { Plus, Trash2, Download, Upload, Volume2, Bell, Keyboard, Palette, Youtube } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 import { Switch } from "../ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Slider } from "../ui/slider";
 import { TimerPreset, TimerSettings } from "../../types/timer";
 
@@ -96,6 +97,13 @@ export default function SettingsPanel() {
     updateSettings({
       ...settings,
       volume: value[0] / 100 // Convert percentage to decimal
+    });
+  };
+
+  const handleThemeChange = (value: 'light' | 'dark' | 'system' | 'theme-purple' | 'theme-blue') => {
+    updateSettings({
+      ...settings,
+      theme: value
     });
   };
 
@@ -273,6 +281,34 @@ export default function SettingsPanel() {
               <p className="font-medium">Toggle Settings</p>
               <p className="text-sm text-muted-foreground">Ctrl + ,</p>
             </div>
+          </div>
+        </Card>
+      </section>
+
+      {/* YouTube Integration */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Youtube className="w-5 h-5" />
+          <h2 className="text-lg font-semibold">YouTube Integration</h2>
+        </div>
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Enable YouTube</Label>
+              <p className="text-sm text-muted-foreground">
+                Play YouTube videos while focusing
+              </p>
+            </div>
+            <Switch
+              checked={settings.youtubeEnabled}
+              onCheckedChange={(checked) => {
+                updateSettings({
+                  ...settings,
+                  youtubeEnabled: checked,
+                  youtubeUrl: checked ? settings.youtubeUrl : "",
+                });
+              }}
+            />
           </div>
         </Card>
       </section>

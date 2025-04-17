@@ -2,9 +2,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '../ui/button';
-import { Minus, Maximize2, Minimize2, GripHorizontal } from 'lucide-react';
+import { Minus, Maximize2, Minimize2, GripHorizontal, Play, Pause, Square, SkipForward, X, Youtube } from 'lucide-react';
+import YouTubePlayer from '../youtube/YouTubePlayer';
 import { cn } from '../../lib/utils';
 import { useTimer } from '../../context/TimerContext';
+import { useSettings } from '../../context/SettingsContext';
+import { formatTime } from '../../lib/utils';
 
 interface Position {
   x: number;
@@ -12,12 +15,14 @@ interface Position {
 }
 
 const FloatingTimer = () => {
-  const timer = useTimer();
+  const { currentTime, totalTime, timerState, startTimer, pauseTimer, resumeTimer, stopTimer } = useTimer();
   const [isDragging, setIsDragging] = useState(false);
-  const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
+  const [position, setPosition] = useState<Position>({ x: window.innerWidth - 300, y: 100 });
   const [isMinimized, setIsMinimized] = useState(false);
   const dragRef = useRef<HTMLDivElement>(null);
   const [dragStart, setDragStart] = useState<Position | null>(null);
+  const [isVisible, setIsVisible] = useState(true);
+  const { settings } = useSettings();
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -63,47 +68,82 @@ const FloatingTimer = () => {
     setIsMinimized(!isMinimized);
   };
 
+  if (!isVisible) return null;
+
   return (
-    <div
-      className={cn(
-        'floating-timer',
-        isMinimized && 'minimized'
-      )}
-      style={{
-        transform: `translate(${position.x}px, ${position.y}px)`,
-      }}
-      ref={dragRef}
-    >
-      <div className="floating-timer-header" onMouseDown={handleMouseDown}>
-        <div className="drag-handle">
-          <GripHorizontal className="h-4 w-4 text-muted-foreground" />
-        </div>
-        <div className="floating-timer-buttons">
-          <button className="floating-timer-button" onClick={toggleMinimize}>
-            {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
-          </button>
+    <div className="space-y-4">
+      {settings.youtubeEnabled && <YouTubePlayer />}
+      <div
+        className={cn(
+          'fixed z-50 bg-card border rounded-lg shadow-lg overflow-hidden',
+          'transition-all duration-200 ease-in-out',
+          isMinimized ? 'w-24 h-12' : 'w-72 h-40'
+        )}
+        style={{
+          transform: `translate(${position.x}px, ${position.y}px)`,
+        }}
+        ref={dragRef}
+      >
+        <div className="bg-muted/10 p-2 flex justify-between items-center cursor-move" onMouseDown={handleMouseDown}>
+          <div className="flex items-center gap-2">
+            <GripHorizontal className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Timer</span>
+          </div>
+          <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={toggleMinimize}>
+            {isMinimized ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
+          </Button>
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsVisible(false)}>
+            <X className="h-3 w-3" />
+          </Button>
         </div>
       </div>
 
-      <div className="timer-display">
-        {formatTime(timer.timeLeft)}
-      </div>
+      <div className="flex-1">
+        {!isMinimized ? (
+          <div className="p-4 space-y-4">
+            <div className="flex justify-center gap-4">
+              {timerState === 'running' ? (
+                <Button
+                  onClick={pauseTimer}
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                >
+                  <Pause className="h-4 w-4" />
+                </Button>
+              ) : timerState === 'paused' ? (
+                <>
+                  <Button
+                    onClick={resumeTimer}
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                  >
+                    <Play className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    onClick={stopTimer}
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                  >
+                    <Square className="h-4 w-4" />
+                  </Button>
+                </>
+              ) : null}
+            </div>
 
-      <div className="timer-controls">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => timer.isRunning ? timer.pauseTimer() : timer.startTimer(timer.totalTime)}
-        >
-          {timer.isRunning ? 'Pause' : 'Start'}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={timer.resetTimer}
-        >
-          Reset
-        </Button>
+            <div className="text-center text-xl font-mono">
+              {formatTime(currentTime)}
+            </div>
+          </div>
+        ) : (
+          <div className="text-center text-sm font-mono p-2">
+            {formatTime(currentTime)}
+          </div>
+        )}
+      </div>
       </div>
     </div>
   );

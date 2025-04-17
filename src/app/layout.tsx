@@ -8,6 +8,7 @@ import { AnalyticsProvider } from './context/AnalyticsContext';
 import { AchievementProvider } from './context/AchievementContext';
 import { ThemeProvider } from './components/ThemeProvider';
 import ToastManager from './components/feedback/ToastManager';
+import { FloatingTimer } from './components/FloatingTimer';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -30,6 +31,7 @@ export default function RootLayout({
                   <AchievementProvider>
                     <ThemeProvider>
                       {children}
+                      <FloatingTimer />
                     </ThemeProvider>
                     <ToastManager />
                   </AchievementProvider>

@@ -8,7 +8,7 @@ import PresetSelector from '@/app/components/timer/PresetSelector';
 import SessionStats from './components/analytics/SessionStats';
 import StreakCounter from './components/analytics/StreakCounter';
 import Achievements from './components/analytics/Achievements';
-import SpotifyPlayer from './components/spotify/SpotifyPlayer';
+import YouTubePlayer from './components/youtube/YouTubePlayer';
 import { Button } from './components/ui/button';
 import { Settings, Moon, Sun } from 'lucide-react';
 import Link from 'next/link';
@@ -71,10 +71,10 @@ export default function Home() {
               <h2 className="text-xl font-semibold mb-4">Timer Presets</h2>
               <PresetSelector />
             </div>
-            {settings.spotifyEnabled && settings.spotifyToken && (
+            {settings.youtubeEnabled && (
               <div className="bg-card rounded-lg p-6 shadow-lg">
                 <h2 className="text-xl font-semibold mb-4">Music</h2>
-                <SpotifyPlayer />
+                <YouTubePlayer />
               </div>
             )}
           </div>

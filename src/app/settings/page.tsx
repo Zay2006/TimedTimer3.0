@@ -125,13 +125,13 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Music className="w-4 h-4" />
-                  <Label htmlFor="spotify">Spotify Integration</Label>
+                  <Label htmlFor="youtube">YouTube Integration</Label>
                 </div>
                 <Switch
-                  id="spotify"
-                  checked={settings.spotifyEnabled}
+                  id="youtube"
+                  checked={settings.youtubeEnabled}
                   onCheckedChange={(checked) =>
-                    updateSettings({ ...settings, spotifyEnabled: checked })
+                    updateSettings({ ...settings, youtubeEnabled: checked })
                   }
                 />
               </div>

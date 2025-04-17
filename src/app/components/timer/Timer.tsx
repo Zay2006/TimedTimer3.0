@@ -7,7 +7,8 @@ import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { formatTime } from '../../lib/utils';
 import { Progress } from '../ui/progress';
-import { Play, Pause, Square, SkipForward, BarChart, Timer as TimerIcon, Clock, Maximize2, Minimize2 } from 'lucide-react';
+import { Play, Pause, Square, SkipForward, BarChart, Timer as TimerIcon, Clock, Maximize2, Minimize2, Youtube } from 'lucide-react';
+import YouTubePlayer from '../youtube/YouTubePlayer';
 import { cn } from '@/app/lib/utils';
 import { Analytics } from '../analytics/Analytics';
 import { TimerMode } from '@/app/types/timer';
@@ -35,11 +36,15 @@ export default function Timer() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const [isPlaying, setIsPlaying] = useState(false);
+
   useEffect(() => {
     // Initialize audio
     audioRef.current = new Audio('/Fall.mp3');
+    audioRef.current.addEventListener('ended', () => setIsPlaying(false));
     return () => {
       if (audioRef.current) {
+        audioRef.current.removeEventListener('ended', () => setIsPlaying(false));
         audioRef.current.pause();
         audioRef.current = null;
       }
@@ -50,14 +55,20 @@ export default function Timer() {
     // Play sound when timer finishes
     if (timerState === 'break' && audioRef.current) {
       audioRef.current.play();
+      setIsPlaying(true);
     }
   }, [timerState]);
 
-  const handleStop = () => {
+  const stopSound = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
+      setIsPlaying(false);
     }
+  }, []);
+
+  const handleStop = () => {
+    stopSound();
     stopTimer();
   };
 
@@ -103,7 +114,9 @@ export default function Timer() {
   }
 
   return (
-    <div 
+    <div className="space-y-4">
+      {settings.youtubeEnabled && <YouTubePlayer />}
+      <div 
       ref={containerRef}
       className={cn(
         "relative p-8 pt-20 overflow-hidden",
@@ -131,7 +144,11 @@ export default function Timer() {
             <Maximize2 className="w-5 h-5" />
           )}
         </Button>
-
+        {isPlaying && (
+          <Button variant="ghost" size="icon" onClick={stopSound} className="text-destructive">
+            <Square className="h-4 w-4" />
+          </Button>
+        )}
         <Button
           variant="default"
           size="lg"
@@ -219,6 +236,7 @@ export default function Timer() {
           ) : null}
         </div>
       </Card>
+      </div>
     </div>
   );
 }

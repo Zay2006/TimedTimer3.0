@@ -25,9 +25,11 @@ TimedTimer is a modern focus timer application built with Next.js 14 that helps 
 
 - **Modern UI/UX**
   - Clean, minimal interface
-  - Dark/light mode support
+  - Multiple theme options (Light, Dark, Purple, Blue)
+  - Smooth theme transitions
   - Responsive design
-  - Floating timer widget
+  - Draggable floating timer
+  - YouTube integration for background music
 
 ## Tech Stack
 
@@ -99,6 +101,18 @@ src/
 - Local storage persistence
 - Type-safe operations
 - Automatic state updates
+
+### Theme System
+- Light and dark mode support
+- Additional color themes (Purple, Blue)
+- System theme detection
+- Smooth theme transitions
+
+### Media Integration
+- YouTube player integration
+- Background video playback
+- Video URL persistence
+- Minimizable player interface
 - Session history tracking
 
 ## Environment Setup

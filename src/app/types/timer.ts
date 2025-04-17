@@ -83,11 +83,10 @@ export interface TimerSettings {
   /** Volume level between 0 and 1 */
   volume: number;
   notificationsEnabled: boolean;
-  theme: 'light' | 'dark' | 'system';
+  theme: 'light' | 'dark' | 'system' | 'theme-purple' | 'theme-blue';
   presets: TimerPreset[];
-  spotifyEnabled: boolean;
-  spotifyToken: string | null;
   youtubeEnabled: boolean;
+  youtubeUrl: string;
   analyticsConfig: AnalyticsConfig;
   // Timer-specific settings
   defaultDuration: number;

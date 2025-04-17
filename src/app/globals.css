@@ -3,7 +3,28 @@
 @tailwind utilities;
 @tailwind variants;
 
+@keyframes theme-transition {
+  from { 
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+  to { 
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.theme-transitioning * {
+  animation: theme-transition 0.3s ease-out;
+}
+
+/* Ensure text is always visible in dark mode */
+.dark *, .theme-purple *, .theme-blue * {
+  color-scheme: dark;
+}
+
 @layer base {
+  /* Default Light Theme */
   :root {
     --radius: 0.625rem;
     --background: oklch(1 0 0);
@@ -40,6 +61,53 @@
     --sidebar-ring: oklch(0.708 0 0);
   }
 
+  /* Purple Theme */
+  .theme-purple {
+    --background: oklch(0.98 0.03 300);
+    --foreground: oklch(0.2 0.05 300);
+    --card: oklch(1 0.02 300);
+    --card-foreground: oklch(0.2 0.05 300);
+    --popover: oklch(1 0.02 300);
+    --popover-foreground: oklch(0.2 0.05 300);
+    --primary: oklch(0.5 0.2 300);
+    --primary-foreground: oklch(0.98 0.02 300);
+    --secondary: oklch(0.95 0.03 300);
+    --secondary-foreground: oklch(0.2 0.05 300);
+    --muted: oklch(0.95 0.03 300);
+    --muted-foreground: oklch(0.5 0.05 300);
+    --accent: oklch(0.9 0.05 300);
+    --accent-foreground: oklch(0.2 0.05 300);
+    --destructive: oklch(0.6 0.2 30);
+    --destructive-foreground: oklch(1 0 0);
+    --border: oklch(0.9 0.03 300);
+    --input: oklch(0.9 0.03 300);
+    --ring: oklch(0.7 0.1 300);
+  }
+
+  /* Blue Theme */
+  .theme-blue {
+    --background: oklch(0.98 0.03 240);
+    --foreground: oklch(0.2 0.05 240);
+    --card: oklch(1 0.02 240);
+    --card-foreground: oklch(0.2 0.05 240);
+    --popover: oklch(1 0.02 240);
+    --popover-foreground: oklch(0.2 0.05 240);
+    --primary: oklch(0.5 0.2 240);
+    --primary-foreground: oklch(0.98 0.02 240);
+    --secondary: oklch(0.95 0.03 240);
+    --secondary-foreground: oklch(0.2 0.05 240);
+    --muted: oklch(0.95 0.03 240);
+    --muted-foreground: oklch(0.5 0.05 240);
+    --accent: oklch(0.9 0.05 240);
+    --accent-foreground: oklch(0.2 0.05 240);
+    --destructive: oklch(0.6 0.2 30);
+    --destructive-foreground: oklch(1 0 0);
+    --border: oklch(0.9 0.03 240);
+    --input: oklch(0.9 0.03 240);
+    --ring: oklch(0.7 0.1 240);
+  }
+
+  /* Dark Theme */
   .dark {
     --background: oklch(0.145 0 0);
     --foreground: oklch(0.985 0 0);

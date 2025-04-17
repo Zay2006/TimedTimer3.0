@@ -59,6 +59,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const [totalBreakTime, setTotalBreakTime] = useState(0);
   const [completedSessions, setCompletedSessions] = useState(0);
   const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
+  const [completionAudio, setCompletionAudio] = useState<HTMLAudioElement | null>(null);
+  const [lastTickTime, setLastTickTime] = useState<number>(0);
   const [timerState, setTimerState] = useState<TimerState>(TimerState.IDLE);
   const [timerMode, setTimerMode] = useState<TimerMode>(TimerMode.COUNTDOWN);
   const [currentTime, setCurrentTime] = useState(0);
@@ -87,7 +89,29 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   /**
    * Completes the current timer session
    */
+  // Cleanup function to handle intervals and audio
+  const cleanup = useCallback(() => {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      setTimerInterval(null);
+    }
+    if (completionAudio) {
+      completionAudio.pause();
+      completionAudio.currentTime = 0;
+      setCompletionAudio(null);
+    }
+  }, [timerInterval, completionAudio]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      cleanup();
+    };
+  }, [cleanup]);
+
   const completeSession = useCallback(() => {
+    cleanup(); // Clean up before completing session
+
     if (currentSession) {
       const updatedSession = {
         ...currentSession,
@@ -164,7 +188,9 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     if (settings.soundEnabled) {
       const audio = new Audio('/Red Light.mp3');
       audio.volume = settings.volume;
+      audio.loop = true;
       audio.play();
+      setCompletionAudio(audio);
     }
 
     // Show notification if enabled
@@ -181,6 +207,11 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
    */
   const startStopwatch = useCallback(() => {
     if (isRunning) return;
+
+    // Clean up any existing intervals first
+    if (timerInterval) {
+      clearInterval(timerInterval);
+    }
 
     const newSession: Session = {
       id: `session-${Date.now()}`,
@@ -200,19 +231,30 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     setTimerMode(TimerMode.STOPWATCH);
     setCurrentTime(0);
     setTotalTime(0);
+    setLastTickTime(Date.now());
 
     const interval = setInterval(() => {
-      setCurrentTime(prev => prev + 1);
+      const now = Date.now();
+      const elapsed = Math.floor((now - lastTickTime) / 1000);
+      if (elapsed > 0) {
+        setCurrentTime(prev => prev + elapsed);
+        setLastTickTime(now);
+      }
     }, 1000);
 
     setTimerInterval(interval);
-  }, [isRunning]);
+  }, [isRunning, timerInterval, lastTickTime]);
 
   /**
    * Starts a new timer session in countdown mode
    */
   const startTimer = useCallback((duration: number) => {
     if (isRunning) return;
+
+    // Clean up any existing intervals first
+    if (timerInterval) {
+      clearInterval(timerInterval);
+    }
 
     const newSession: Session = {
       id: `session-${Date.now()}`,
@@ -232,6 +274,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     setTimerMode(TimerMode.COUNTDOWN);
     setCurrentTime(duration);
     setTotalTime(duration);
+    setLastTickTime(Date.now());
 
     const interval = setInterval(() => {
       setTimeLeft(prev => {
@@ -248,30 +291,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }, 1000);
 
     setTimerInterval(interval);
-  }, [isRunning, completeSession]);
-
-  /**
-   * Pauses the current timer session
-   */
-  const pauseTimer = useCallback(() => {
-    if (!isRunning || isPaused) return;
-
-    if (timerInterval) {
-      clearInterval(timerInterval);
-    }
-    setIsPaused(true);
-    setIsRunning(false);
-    setTimerState(TimerState.PAUSED);
-
-    if (currentSession) {
-      const focusTime = timerMode === TimerMode.STOPWATCH ? currentTime : currentSession.duration - timeLeft;
-      setTotalFocusTime(prev => prev + focusTime);
-      setCurrentSession(prev => prev ? {
-        ...prev,
-        focusTime: (prev.focusTime || 0) + focusTime
-      } : null);
-    }
-  }, [isRunning, isPaused, timerInterval, currentSession, timeLeft, timerMode, currentTime]);
+  }, [isRunning, timerInterval, completeSession]);
 
   /**
    * Resumes a paused timer session
@@ -307,36 +327,6 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       setTimerInterval(interval);
     }
   }, [isPaused, timerMode, currentSession, completeSession]);
-
-  /**
-   * Stops and resets the current timer session
-   */
-  const stopTimer = useCallback(() => {
-    if (!isRunning && !isPaused) return;
-
-    if (timerInterval) {
-      clearInterval(timerInterval);
-    }
-
-    if (currentSession) {
-      const focusTime = timerMode === TimerMode.STOPWATCH ? currentTime : currentSession.duration - timeLeft;
-      setTotalFocusTime(prev => prev + focusTime);
-      setCurrentSession(prev => prev ? {
-        ...prev,
-        endTime: new Date().toISOString(),
-        interrupted: true,
-        focusTime: (prev.focusTime || 0) + focusTime
-      } : null);
-    }
-
-    setIsRunning(false);
-    setIsPaused(false);
-    setTimeLeft(0);
-    setTimerInterval(null);
-    setTimerState(TimerState.IDLE);
-    setCurrentTime(0);
-    setTotalTime(0);
-  }, [isRunning, isPaused, timerInterval, currentSession, timeLeft, timerMode, currentTime]);
 
   /**
    * Resets the timer to its initial state
@@ -383,6 +373,65 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const progress = currentSession && currentSession.duration > 0
     ? ((currentSession.duration - timeLeft) / currentSession.duration) * 100
     : timerMode === TimerMode.STOPWATCH ? 0 : 0;
+
+  /**
+   * Pauses the current timer session
+   */
+  const pauseTimer = useCallback(() => {
+    if (!isRunning || isPaused) return;
+
+    if (timerInterval) {
+      clearInterval(timerInterval);
+    }
+
+    setIsRunning(false);
+    setIsPaused(true);
+    setTimerState(TimerState.PAUSED);
+    setTimerInterval(null);
+  }, [isRunning, isPaused, timerInterval]);
+
+  /**
+   * Stops the current timer session
+   */
+  const stopTimer = useCallback(() => {
+    // Stop the timer regardless of its current state
+    if (timerInterval) {
+      clearInterval(timerInterval);
+    }
+
+    // Stop any playing completion sound
+    if (completionAudio) {
+      completionAudio.pause();
+      completionAudio.currentTime = 0;
+      setCompletionAudio(null);
+    }
+
+    // Reset all timer states
+    setCurrentSession(prev => {
+      if (prev && !prev.completed) {
+        // Update analytics for interrupted session
+        const updatedSession = {
+          ...prev,
+          endTime: new Date().toISOString(),
+          completed: false,
+          interrupted: true,
+          focusTime: prev.duration - timeLeft
+        };
+        // You might want to save this to your analytics
+        return null;
+      }
+      return null;
+    });
+    
+    setIsRunning(false);
+    setIsPaused(false);
+    setTimeLeft(0);
+    setTimerInterval(null);
+    setTimerState(TimerState.IDLE);
+    setCurrentTime(0);
+    setTotalTime(0);
+    setLastTickTime(0);
+  }, [timerInterval, completionAudio, timeLeft]);
 
   return (
     <TimerContext.Provider value={{
