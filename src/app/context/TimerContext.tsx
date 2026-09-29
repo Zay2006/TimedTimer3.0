@@ -233,17 +233,13 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     setTotalTime(0);
     setLastTickTime(Date.now());
 
+    const startedAt = Date.now();
     const interval = setInterval(() => {
-      const now = Date.now();
-      const elapsed = Math.floor((now - lastTickTime) / 1000);
-      if (elapsed > 0) {
-        setCurrentTime(prev => prev + elapsed);
-        setLastTickTime(now);
-      }
+      setCurrentTime(Math.floor((Date.now() - startedAt) / 1000));
     }, 1000);
 
     setTimerInterval(interval);
-  }, [isRunning, timerInterval, lastTickTime]);
+  }, [isRunning, timerInterval]);
 
   /**
    * Starts a new timer session in countdown mode
@@ -313,7 +309,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       const interval = setInterval(() => {
         setTimeLeft(prev => {
           const newTimeLeft = prev - 1;
-          setCurrentTime(currentSession!.duration - newTimeLeft);
+          setCurrentTime(newTimeLeft);
           
           if (newTimeLeft <= 0) {
             clearInterval(interval);
@@ -326,7 +322,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
       setTimerInterval(interval);
     }
-  }, [isPaused, timerMode, currentSession, completeSession]);
+  }, [isPaused, timerMode, completeSession]);
 
   /**
    * Resets the timer to its initial state
