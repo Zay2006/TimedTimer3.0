@@ -1,58 +1,52 @@
 "use client";
 
 import { useSettings } from '../context/SettingsContext';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { cn } from '../lib/utils';
+
+function themeClassName(theme: string) {
+  if (theme === 'dark') return 'dark';
+  if (theme === 'theme-purple' || theme === 'purple') return 'theme-purple';
+  if (theme === 'theme-blue' || theme === 'blue') return 'theme-blue';
+  return '';
+}
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const { settings } = useSettings();
-  const [theme, setTheme] = useState('');
+  const [systemDark, setSystemDark] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const skipFirstTransition = useRef(true);
 
   useEffect(() => {
-    // Check if we should use system preference
-    if (settings.theme === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const newTheme = mediaQuery.matches ? 'dark' : 'light';
-      if (newTheme !== theme) {
-        setIsTransitioning(true);
-        setTheme(newTheme);
-      }
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    setSystemDark(mediaQuery.matches);
+    const handler = (event: MediaQueryListEvent) => setSystemDark(event.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
 
-      // Listen for system theme changes
-      const handler = (e: MediaQueryListEvent) => {
-        setIsTransitioning(true);
-        setTheme(e.matches ? 'dark' : 'light');
-      };
-      mediaQuery.addEventListener('change', handler);
-      return () => mediaQuery.removeEventListener('change', handler);
-    } else if (settings.theme !== theme) {
-      setIsTransitioning(true);
-      setTheme(settings.theme || 'light');
-    }
-  }, [settings.theme, theme]);
+  const resolved = settings.theme === 'system'
+    ? (systemDark ? 'dark' : 'light')
+    : settings.theme;
 
-  // Reset transition flag
   useEffect(() => {
-    if (isTransitioning) {
-      const timer = setTimeout(() => setIsTransitioning(false), 300);
-      return () => clearTimeout(timer);
+    if (skipFirstTransition.current) {
+      skipFirstTransition.current = false;
+      return;
     }
-  }, [isTransitioning]);
-
-  const themeClasses = [
-    'min-h-screen',
-    'bg-background',
-    'text-foreground',
-    'transition-all',
-    'duration-300',
-    theme,
-    theme === 'purple' && 'theme-purple',
-    theme === 'blue' && 'theme-blue',
-    isTransitioning && 'theme-transitioning'
-  ].filter(Boolean).join(' ');
+    setIsTransitioning(true);
+    const timer = setTimeout(() => setIsTransitioning(false), 300);
+    return () => clearTimeout(timer);
+  }, [resolved]);
 
   return (
-    <div className={themeClasses}>
+    <div
+      className={cn(
+        'min-h-screen bg-background text-foreground transition-colors duration-300',
+        themeClassName(resolved),
+        isTransitioning && 'theme-transitioning'
+      )}
+    >
       {children}
     </div>
   );

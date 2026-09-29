@@ -49,7 +49,6 @@ export interface TimerSettings {
   autoStartNextSession: boolean;
   defaultDuration: number;
   defaultBreakDuration: number;
-  spotifyEnabled: boolean;
   presets: TimerPreset[];
 }
 

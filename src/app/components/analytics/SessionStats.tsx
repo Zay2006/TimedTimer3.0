@@ -16,9 +16,9 @@ interface StatCardProps {
   color?: string;
 }
 
-function StatCard({ icon: Icon, title, value, tooltip, color = 'text-primary' }: StatCardProps) {
+function StatCard({ icon: Icon, title, value, tooltip, color = 'text-primary', tint = 'bg-violet-500/10 border-violet-300/50' }: StatCardProps & { tint?: string }) {
   const content = (
-    <Card className="p-4">
+    <Card className={`p-4 border ${tint} transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md`}>
       <div className="flex items-center gap-4">
         <Icon className={`w-8 h-8 ${color}`} />
         <div>
@@ -84,26 +84,32 @@ export default function SessionStats() {
           title="Sessions"
           value={`${todayStats.sessions}/${todayStats.targetSessions}`}
           tooltip="Completed sessions / Daily target"
+          color="text-violet-500"
+          tint="bg-violet-500/10 border-violet-300/60"
         />
         <StatCard
           icon={Clock}
           title="Focus Time"
           value={formatTime(todayStats.focusTime)}
           tooltip="Total time spent focusing today"
+          color="text-sky-500"
+          tint="bg-sky-500/10 border-sky-300/60"
         />
         <StatCard
           icon={CheckCircle2}
           title="Completion Rate"
           value={`${Math.round(todayStats.completionRate)}%`}
           tooltip="Percentage of completed sessions"
-          color={todayStats.completionRate >= 80 ? 'text-green-500' : 'text-primary'}
+          color={todayStats.completionRate >= 80 ? 'text-emerald-500' : 'text-emerald-600'}
+          tint="bg-emerald-500/10 border-emerald-300/60"
         />
         <StatCard
           icon={Flame}
           title="Streak"
           value={data.analytics.currentStreak}
           tooltip={`Best streak: ${data.analytics.longestStreak} days`}
-          color={data.analytics.currentStreak >= 3 ? 'text-orange-500' : 'text-primary'}
+          color="text-orange-500"
+          tint="bg-orange-500/10 border-orange-300/60"
         />
       </div>
     </div>

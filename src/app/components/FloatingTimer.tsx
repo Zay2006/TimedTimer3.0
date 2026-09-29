@@ -6,7 +6,7 @@ import { formatTime } from '../utils/time';
 import { X } from 'lucide-react';
 
 export function FloatingTimer() {
-  const { currentTime, isRunning, isPaused } = useTimer();
+  const { currentTime, isRunning, isPaused, timerState } = useTimer();
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState({ x: 20, y: 20 });
   const [isDragging, setIsDragging] = useState(false);
@@ -44,8 +44,14 @@ export function FloatingTimer() {
 
   return (
     <div
-      className="fixed z-50 bg-card text-card-foreground shadow-lg rounded-lg p-3 cursor-move
-                 flex items-center gap-2 min-w-[120px] select-none border border-border"
+      className={`fixed z-50 bg-card text-card-foreground shadow-lg rounded-lg p-3 cursor-move
+                 flex items-center gap-2 min-w-[120px] select-none border-2 ${
+                   timerState === 'paused'
+                     ? 'border-amber-400'
+                     : timerState === 'break'
+                       ? 'border-emerald-400'
+                       : 'border-violet-400'
+                 }`}
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`

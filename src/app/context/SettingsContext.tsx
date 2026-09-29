@@ -9,7 +9,7 @@
  * - Sound settings
  * - Notification preferences
  * - Data persistence
- * - Spotify integration settings
+ * - YouTube integration settings
  */
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
