@@ -80,24 +80,20 @@ export default function Achievements() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold flex items-center gap-2">
-        <Trophy className="w-5 h-5 text-primary" />
-        Achievements
-      </h2>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2">
         {achievements.map((achievement) => {
           const isUnlocked = achievement.condition(data);
           const progress = calculateProgress(achievement);
 
           return (
             <TooltipProvider key={achievement.id}>
-              <Card className={`p-4 ${isUnlocked ? 'bg-accent/10' : ''}`}>
+              <Card className={`h-full p-3 ${isUnlocked ? 'bg-accent/10' : ''}`}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="flex items-center gap-4 cursor-help">
-                      <achievement.icon className={`w-8 h-8 ${achievement.color} ${isUnlocked ? 'animate-pulse' : 'opacity-50'}`} />
-                      <div className="flex-1">
-                        <h3 className="font-semibold">{achievement.title}</h3>
+                    <div className="flex items-center gap-3 cursor-help">
+                      <achievement.icon className={`w-6 h-6 shrink-0 ${achievement.color} ${isUnlocked ? 'animate-pulse' : 'opacity-50'}`} />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-semibold leading-tight">{achievement.title}</h3>
                         <div className="h-1.5 w-full bg-secondary mt-2 rounded-full overflow-hidden">
                           <div
                             className="h-full bg-primary transition-all duration-500"
