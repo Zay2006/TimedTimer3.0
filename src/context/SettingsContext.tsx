@@ -23,7 +23,6 @@ const defaultSettings: TimerSettings = {
   autoStartNextSession: false,
   defaultDuration: 1500,
   defaultBreakDuration: 300,
-  spotifyEnabled: false,
   presets: defaultPresets,
 };
 

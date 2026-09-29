@@ -110,9 +110,6 @@ setTimeRemaining(prev => prev - 1);  // Correct
    - Configure environment variables:
      ```env
      NEXT_PUBLIC_APP_URL=http://localhost:3000
-     # Add Spotify credentials if using music integration
-     SPOTIFY_CLIENT_ID=your_client_id
-     SPOTIFY_CLIENT_SECRET=your_client_secret
      ```
 
 4. **Development Server**
@@ -169,7 +166,7 @@ setTimeRemaining(prev => prev - 1);  // Correct
      - `/analytics/`: Analytics visualization and reporting
      - `/settings/`: Settings management
      - `/achievements/`: Achievement system
-     - `/spotify/`: Music integration
+     - `/youtube/`: Background music
      - etc.
 
 3. **Analytics Implementation**

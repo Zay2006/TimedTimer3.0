@@ -52,7 +52,10 @@ export function Analytics({ onBack }: AnalyticsProps) {
         <AchievementsDialog />
       </div>
       <div className="space-y-6">
-        <SessionStats />
+        <div className="space-y-3">
+          <h3 className="text-lg font-semibold">Today&apos;s Progress</h3>
+          <SessionStats />
+        </div>
         <StreakCounter />
         <div className="grid gap-6 md:grid-cols-2">
           <Card className="p-4">

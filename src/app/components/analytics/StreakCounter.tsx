@@ -12,7 +12,7 @@ export default function StreakCounter() {
 
   return (
     <TooltipProvider>
-      <Card className="p-4">
+      <Card className="p-4 border border-orange-300/60 bg-gradient-to-r from-orange-500/15 to-rose-500/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Flame className="w-5 h-5 text-orange-500" />

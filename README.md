@@ -121,10 +121,6 @@ src/
    Create a `.env.local` file in the root directory:
    ```env
    NEXT_PUBLIC_APP_URL=http://localhost:3000
-   
-   # Optional: Spotify Integration
-   SPOTIFY_CLIENT_ID=your_client_id
-   SPOTIFY_CLIENT_SECRET=your_client_secret
    ```
 
 ## Troubleshooting

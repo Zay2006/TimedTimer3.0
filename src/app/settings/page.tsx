@@ -7,22 +7,16 @@ import { Switch } from '../components/ui/switch';
 import { Label } from '../components/ui/label';
 import { Slider } from '../components/ui/slider';
 import { Separator } from '../components/ui/separator';
-import { Moon, Sun, Volume2, Bell, Music, Settings2, Timer, ArrowLeft } from 'lucide-react';
+import { Volume2, Bell, Music, Settings2, Timer, ArrowLeft, Palette } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import TimerSettings from '../components/settings/TimerSettings';
 import TimerAdvancedSettings from '../components/settings/TimerAdvancedSettings';
 import Link from 'next/link';
+import { ThemePicker } from '../components/ThemePicker';
 
 export default function SettingsPage() {
   const { settings, updateSettings } = useSettings();
-
-  const toggleTheme = () => {
-    updateSettings({
-      ...settings,
-      theme: settings.theme === 'dark' ? 'light' : 'dark'
-    });
-  };
 
   const handleVolumeChange = (value: number[]) => {
     updateSettings({
@@ -48,21 +42,16 @@ export default function SettingsPage() {
         <div className="space-y-6">
           <Card className="p-6 space-y-6">
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold">Appearance</h2>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {settings.theme === 'dark' ? (
-                    <Moon className="w-4 h-4" />
-                  ) : (
-                    <Sun className="w-4 h-4" />
-                  )}
-                  <Label htmlFor="theme">Dark Mode</Label>
-                </div>
-                <Switch
-                  id="theme"
-                  checked={settings.theme === 'dark'}
-                  onCheckedChange={toggleTheme}
-                />
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <Palette className="w-5 h-5 text-fuchsia-500" />
+                Appearance
+              </h2>
+              <div className="space-y-3">
+                <Label>Color theme</Label>
+                <ThemePicker />
+                <p className="text-sm text-muted-foreground">
+                  Light, dark, purple, or blue. The same picker is on the timer page.
+                </p>
               </div>
             </div>
 
